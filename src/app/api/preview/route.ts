@@ -30,7 +30,8 @@ export async function POST(request: NextRequest) {
       prompt: 'Transform this baby photo into a delicate watercolor birth poster with soft pastel washes, white margins, and an artistic tender style suitable for a nursery. Make it look like a beautiful commemorative artwork.',
       size: '1024x1536',
       quality: 'low',
-      response_format: 'url'
+      n: 1
+      // response_format stöds INTE av images.edit!
     });
 
     if (!response.data || response.data.length === 0) {
