@@ -16,14 +16,19 @@ export async function POST(request: NextRequest) {
       apiKey: process.env.OPENAI_API_KEY! 
     });
 
+    // GPT Image 1 med korrekt Buffer-typ och error handling
     const response = await openai.images.edit({
       model: 'gpt-image-1',
-      image: buffer as any, // TypeScript workaround for Buffer type
-      prompt: 'Delicate watercolor birth poster of the uploaded newborn photo, soft pastel washes, white margins',
+      image: new File([buffer], 'image.png', { type: 'image/png' }),
+      prompt: 'Transform this baby photo into a delicate watercolor birth poster with soft pastel washes, white margins, and an artistic tender style suitable for a nursery. Make it look like a beautiful commemorative artwork.',
       size: '1024x1536',
       quality: 'low',
-      response_format: 'url',
+      n: 1,
     });
+
+    if (!response.data || response.data.length === 0) {
+      throw new Error('No image data returned from API');
+    }
 
     return NextResponse.json({ url: response.data[0].url });
     
