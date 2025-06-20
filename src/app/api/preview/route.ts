@@ -17,10 +17,11 @@ export async function POST(request: NextRequest) {
     });
 
     const response = await openai.images.edit({
-      model: 'dall-e-2',
-      image: buffer,
+      model: 'gpt-image-1',
+      image: buffer as any, // TypeScript workaround for Buffer type
       prompt: 'Delicate watercolor birth poster of the uploaded newborn photo, soft pastel washes, white margins',
-      size: '1024x1024',
+      size: '1024x1536',
+      quality: 'low',
       response_format: 'url',
     });
 
