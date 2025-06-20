@@ -3,18 +3,34 @@ export const runtime = 'nodejs'; // Krävs för Buffer-hantering
 import { NextRequest, NextResponse } from 'next/server';
 import { OpenAI } from 'openai';
 import { toFile } from 'openai/uploads';
+import formidable from 'formidable';
+import { promises as fs } from 'fs';
+import { IncomingMessage } from 'http';
 
 export async function POST(request: NextRequest) {
   try {
-    const formData = await request.formData();
-    const file = formData.get('file') as File;
+    // Konvertera NextRequest till Node.js IncomingMessage format
+    const req = request as unknown as IncomingMessage;
     
-    if (!file) {
+    // Använd formidable för korrekt multipart-parsing
+    const form = formidable({ multiples: false });
+    
+    const [, files] = await new Promise<[formidable.Fields, formidable.Files]>((resolve, reject) => {
+      form.parse(req, (err, fields, files) => {
+        if (err) reject(err);
+        else resolve([fields, files]);
+      });
+    });
+
+    const fileArray = files.file as formidable.File[];
+    if (!fileArray || fileArray.length === 0) {
       return NextResponse.json({ error: 'No file uploaded' }, { status: 400 });
     }
 
-    // Konvertera File till Buffer för Node.js runtime
-    const buffer = Buffer.from(await file.arrayBuffer());
+    const uploadedFile = fileArray[0];
+    
+    // Läs filen från tillfällig path
+    const buffer = await fs.readFile(uploadedFile.filepath);
     
     // Använd toFile för korrekt TypeScript-typ
     const imageFile = await toFile(buffer, 'photo.png');
