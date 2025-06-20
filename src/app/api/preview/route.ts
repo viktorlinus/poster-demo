@@ -1,39 +1,56 @@
-export const runtime = 'nodejs'; // Krävs för Buffer-hantering
-
 import { NextRequest, NextResponse } from 'next/server';
 import { OpenAI } from 'openai';
 import { toFile } from 'openai/uploads';
-import formidable from 'formidable';
-import { promises as fs } from 'fs';
-import { IncomingMessage } from 'http';
 
 export async function POST(request: NextRequest) {
   try {
-    // Konvertera NextRequest till Node.js IncomingMessage format
-    const req = request as unknown as IncomingMessage;
-    
-    // Använd formidable för korrekt multipart-parsing
-    const form = formidable({ multiples: false });
-    
-    const [, files] = await new Promise<[formidable.Fields, formidable.Files]>((resolve, reject) => {
-      form.parse(req, (err, fields, files) => {
-        if (err) reject(err);
-        else resolve([fields, files]);
-      });
-    });
+    // Använd inbyggd FormData API istället för formidable
+    const formData = await request.formData();
+    const file = formData.get('file') as File | null;
 
-    const fileArray = files.file as formidable.File[];
-    if (!fileArray || fileArray.length === 0) {
+    if (!file) {
       return NextResponse.json({ error: 'No file uploaded' }, { status: 400 });
     }
 
-    const uploadedFile = fileArray[0];
+    // Debug: logga filinfo
+    console.log('File info:', {
+      name: file.name,
+      type: file.type,
+      size: file.size
+    });
+
+    // Validera filtyp
+    const supportedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+    if (!supportedTypes.includes(file.type)) {
+      return NextResponse.json({
+        error: `Filtyp inte stödd: ${file.type}. Använd JPEG, PNG eller WebP.`
+      }, { status: 400 });
+    }
+
+    // Konvertera File till Buffer för OpenAI
+    const buffer = Buffer.from(await file.arrayBuffer());
     
-    // Läs filen från tillfällig path
-    const buffer = await fs.readFile(uploadedFile.filepath);
+    // Få rätt filextension baserat på MIME-typ
+    const getExtension = (mimeType: string) => {
+      switch (mimeType) {
+        case 'image/jpeg':
+        case 'image/jpg':
+          return 'jpg';
+        case 'image/png':
+          return 'png';
+        case 'image/webp':
+          return 'webp';
+        default:
+          return 'jpg';
+      }
+    };
     
-    // Använd toFile för korrekt TypeScript-typ
-    const imageFile = await toFile(buffer, 'photo.png');
+    // Skapa korrekt filnamn med rätt extension
+    const extension = getExtension(file.type);
+    const fileName = `image.${extension}`;
+    
+    // Använd toFile med korrekt filnamn och MIME-typ
+    const imageFile = await toFile(buffer, fileName, { type: file.type });
     
     const openai = new OpenAI({ 
       apiKey: process.env.OPENAI_API_KEY! 
@@ -47,23 +64,29 @@ export async function POST(request: NextRequest) {
       size: '1024x1536',
       quality: 'low',
       n: 1
-      // response_format stöds INTE av images.edit!
     });
 
     if (!response.data || response.data.length === 0) {
       throw new Error('No image data returned from API');
     }
 
-    return NextResponse.json({ url: response.data[0].url });
+    console.log('OpenAI response:', response.data[0]);
+    
+    // Hantera både URL och base64 format
+    let imageUrl;
+    if (response.data[0].url) {
+      imageUrl = response.data[0].url;
+    } else if (response.data[0].b64_json) {
+      // Konvertera base64 till data URL
+      imageUrl = `data:image/png;base64,${response.data[0].b64_json}`;
+    } else {
+      throw new Error('No image URL or base64 data returned');
+    }
+    
+    return NextResponse.json({ url: imageUrl });
     
   } catch (error) {
     console.error('API Error:', error);
-    
-    // Log mer detaljer om felet
-    if (error instanceof Error) {
-      console.error('Error message:', error.message);
-      console.error('Error stack:', error.stack);
-    }
     
     return NextResponse.json({ 
       error: 'Failed to generate image',
