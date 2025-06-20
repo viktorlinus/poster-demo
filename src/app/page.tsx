@@ -7,9 +7,7 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
 
   const handleClick = async () => {
-    console.log('Button clicked, file:', file);
     if (!file) {
-      console.log('No file selected');
       return;
     }
     
@@ -18,15 +16,12 @@ export default function Home() {
     formData.append('file', file);
 
     try {
-      console.log('Sending request to /api/preview');
       const res = await fetch('/api/preview', { 
         method: 'POST', 
         body: formData 
       });
-      console.log('Response status:', res.status);
       
       const data = await res.json();
-      console.log('Response data:', data);
       
       if (data.error) {
         alert(`Fel: ${data.error}`);
@@ -34,10 +29,8 @@ export default function Home() {
       }
       
       if (data.url) {
-        console.log('Setting preview URL:', data.url);
         setPreview(data.url);
       } else {
-        console.error('No URL in response:', data);
         alert('Ingen bild-URL mottagen');
       }
     } catch (error) {

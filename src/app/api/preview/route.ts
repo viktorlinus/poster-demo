@@ -12,13 +12,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'No file uploaded' }, { status: 400 });
     }
 
-    // Debug: logga filinfo
-    console.log('File info:', {
-      name: file.name,
-      type: file.type,
-      size: file.size
-    });
-
     // Validera filtyp
     const supportedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
     if (!supportedTypes.includes(file.type)) {
@@ -69,8 +62,6 @@ export async function POST(request: NextRequest) {
     if (!response.data || response.data.length === 0) {
       throw new Error('No image data returned from API');
     }
-
-    console.log('OpenAI response:', response.data[0]);
     
     // Hantera både URL och base64 format
     let imageUrl;
