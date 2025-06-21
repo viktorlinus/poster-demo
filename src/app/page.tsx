@@ -1,12 +1,21 @@
 'use client';
 import { useState } from 'react';
-import { STYLE_CONFIGS, DEFAULT_STYLE, getStyleDisplayName } from '@/lib/styles';
+import { STYLE_CONFIGS, DEFAULT_STYLE, getStyleDisplayName, generateMemoryPrompts } from '@/lib/styles';
+
+interface PreviewResult {
+  url: string;
+  promptName: string;
+  error?: string;
+}
 
 export default function Home() {
-  const [preview, setPreview] = useState<string>();
+  const [previewResults, setPreviewResults] = useState<PreviewResult[]>();
   const [file, setFile] = useState<File>();
   const [loading, setLoading] = useState(false);
   const [style, setStyle] = useState(DEFAULT_STYLE);
+
+  // Flytta generateMemoryPrompts anrop här så TypeScript ser att den används
+  const getMemoryPrompts = () => generateMemoryPrompts(style);
 
 
 
@@ -16,28 +25,51 @@ export default function Home() {
     }
     
     setLoading(true);
-    const formData = new FormData();
-    formData.append('file', file);
-    formData.append('style', style);
-
+    setPreviewResults(undefined);
+    
+    // Generera alla 4 memory prompts
+    const memoryPrompts = getMemoryPrompts();
+    
     try {
-      const res = await fetch('/api/preview', { 
-        method: 'POST', 
-        body: formData 
+      // Skicka 4 parallella requests
+      const promises = memoryPrompts.map(async (promptData) => {
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('style', style);
+        formData.append('customPrompt', promptData.prompt);
+        
+        try {
+          const res = await fetch('/api/preview', { 
+            method: 'POST', 
+            body: formData 
+          });
+          
+          const data = await res.json();
+          
+          if (data.error) {
+            return {
+              url: '',
+              promptName: promptData.name,
+              error: data.error
+            };
+          }
+          
+          return {
+            url: data.url || '',
+            promptName: promptData.name,
+          };
+        } catch {
+          return {
+            url: '',
+            promptName: promptData.name,
+            error: 'Network error'
+          };
+        }
       });
       
-      const data = await res.json();
+      const results = await Promise.all(promises);
+      setPreviewResults(results);
       
-      if (data.error) {
-        alert(`Fel: ${data.error}`);
-        return;
-      }
-      
-      if (data.url) {
-        setPreview(data.url);
-      } else {
-        alert('Ingen bild-URL mottagen');
-      }
     } catch (error) {
       console.error('Error:', error);
       alert('Något gick fel, försök igen');
@@ -85,20 +117,37 @@ export default function Home() {
           disabled={!file || loading}
           className="w-full bg-blue-500 text-white py-3 px-6 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-blue-600 font-semibold"
         >
-          {loading ? `Genererar ${getStyleDisplayName(style)}-poster...` : 'Förhandsgranska (gratis)'}
+          {loading ? `Genererar 4 ${getStyleDisplayName(style)}-varianter...` : 'Generera 4 varianter (jämför prompts)'}
         </button>
       </div>
 
-      {preview && (
+      {previewResults && (
         <div className="mt-8">
-          <h2 className="text-lg font-semibold mb-4">Din AI-genererade poster:</h2>
-          <img 
-            src={preview} 
-            alt="AI Generated Poster"
-            className="w-full border-2 border-gray-300 rounded-lg shadow-md"
-          />
-          <p className="text-sm text-gray-600 mt-2">
-            Detta är en låg-kvalitets förhandsvisning i {getStyleDisplayName(style)}-stil. Final poster blir högupplöst.
+          <h2 className="text-lg font-semibold mb-4">Dina AI-genererade poster-varianter:</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {previewResults.map((result, index) => (
+              <div key={index} className="border-2 border-gray-300 rounded-lg p-4">
+                <h3 className="font-medium mb-2">{result.promptName}</h3>
+                {result.error ? (
+                  <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+                    <p className="text-sm">Fel: {result.error}</p>
+                  </div>
+                ) : result.url ? (
+                  <img 
+                    src={result.url} 
+                    alt={`AI Generated Poster - ${result.promptName}`}
+                    className="w-full rounded-lg shadow-md"
+                  />
+                ) : (
+                  <div className="bg-gray-100 h-64 rounded-lg flex items-center justify-center">
+                    <p className="text-gray-500">Ingen bild genererad</p>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+          <p className="text-sm text-gray-600 mt-4 text-center">
+            Detta är låg-kvalitets förhandsvisningar i {getStyleDisplayName(style)}-stil. Jämför resultaten för att se vilken prompt som bevarar likheten bäst!
           </p>
         </div>
       )}

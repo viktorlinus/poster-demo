@@ -66,3 +66,59 @@ export const generateStylePrompt = (style: string): string => {
     'Do not add any text to the image.'
   ].join(' ');
 };
+
+// Nya förbättrade prompts baserat på v2+v4 combo + nya ord
+export const generateMemoryPrompts = (style: string) => {
+  const config = STYLE_CONFIGS[style] || STYLE_CONFIGS[DEFAULT_STYLE];
+  
+  return [
+    {
+      id: 'combo-v5',
+      name: 'Combo v5 - Best of v2+v4',
+      prompt: [
+        `Create a ${config.medium} tribute portrait maintaining every detail and recognizable traits of this beloved subject.`,
+        'Keep all original elements intact while honoring their distinctive appearance and natural essence.',
+        `Apply ${config.technique.toLowerCase()} for enhancement only, not alteration,`,
+        'preserving the authentic look and personality.',
+        'Format as poster with white margins and text space.',
+        'Do not add any text to the image.'
+      ].join(' ')
+    },
+    {
+      id: 'artistic-portrait',
+      name: 'Artistic Portrait',
+      prompt: [
+        `Render this portrait in ${config.medium} artistic style while maintaining exact facial characteristics.`,
+        'Preserve the subject\'s natural features and distinctive traits.',
+        `Use ${config.technique.toLowerCase()} to enhance without changing core appearance.`,
+        'Keep authentic details and recognizable qualities intact.',
+        'Create poster format with margins and space for text.',
+        'Do not include any text.'
+      ].join(' ')
+    },
+    {
+      id: 'commemorative',
+      name: 'Commemorative Artwork',
+      prompt: [
+        `Transform this portrait into commemorative ${config.medium} artwork preserving all identifying features.`,
+        'Maintain the subject\'s unique characteristics and natural appearance.',
+        `Apply ${config.technique.toLowerCase()} while keeping original details unchanged.`,
+        'Honor their authentic look and distinctive qualities.',
+        'Format with white borders and bottom text area.',
+        'No text should be added.'
+      ].join(' ')
+    },
+    {
+      id: 'keepsake',
+      name: 'Keepsake Portrait',
+      prompt: [
+        `Create a ${config.medium} keepsake portrait capturing every detail of this cherished subject.`,
+        'Preserve their recognizable features and natural essence completely.',
+        `Use ${config.technique.toLowerCase()} for artistic enhancement without altering identity.`,
+        'Maintain authentic appearance and distinctive characteristics.',
+        'Design as poster with white margins and text space.',
+        'Do not add text to the image.'
+      ].join(' ')
+    }
+  ];
+};

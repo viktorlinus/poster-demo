@@ -10,6 +10,7 @@ export async function POST(request: NextRequest) {
     const file = formData.get('file') as File | null;
     const rawStyle = formData.get('style') as string || DEFAULT_STYLE;
     const style = isValidStyle(rawStyle) ? rawStyle : DEFAULT_STYLE;
+    const customPrompt = formData.get('customPrompt') as string || null;
 
     if (!file) {
       return NextResponse.json({ error: 'No file uploaded' }, { status: 400 });
@@ -54,11 +55,14 @@ export async function POST(request: NextRequest) {
 
 
 
+    // Använd custom prompt om den finns, annars standard
+    const finalPrompt = customPrompt || generateStylePrompt(style);
+
     // GPT Image 1 med toFile - garanterat typ-säkert
     const response = await openai.images.edit({
       model: 'gpt-image-1',
       image: imageFile,
-      prompt: generateStylePrompt(style),
+      prompt: finalPrompt,
       size: '1024x1536',
       quality: 'low',
       n: 1
