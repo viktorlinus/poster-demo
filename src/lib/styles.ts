@@ -58,67 +58,38 @@ export const generateStylePrompt = (style: string): string => {
   const config = STYLE_CONFIGS[style] || STYLE_CONFIGS[DEFAULT_STYLE];
   
   return [
-    `Render this image in ${config.medium} style`,
-    'while preserving the exact composition, features, and details from the original.',
-    `Use ${config.technique.toLowerCase()}`,
-    'for artistic enhancement without changing any visual elements.',
-    'Format as poster with white margins and leave space at the bottom for text.',
-    'Do not add any text to the image.'
+    `Apply ${config.medium} artistic style to this pet portrait.`,
+    `${config.technique}`,
+    'Capture the animal\'s personality and distinctive features.',
+    'Create poster format with white borders and keep bottom 20% empty for text.',
+    'No text.'
   ].join(' ');
 };
 
-// Nya förbättrade prompts baserat på v2+v4 combo + nya ord
+// Extremt enkla, generiska prompts som borde fungera för alla bilder
 export const generateMemoryPrompts = (style: string) => {
   const config = STYLE_CONFIGS[style] || STYLE_CONFIGS[DEFAULT_STYLE];
   
   return [
     {
-      id: 'combo-v5',
-      name: 'Combo v5 - Best of v2+v4',
-      prompt: [
-        `Create a ${config.medium} tribute portrait maintaining every detail and recognizable traits of this beloved subject.`,
-        'Keep all original elements intact while honoring their distinctive appearance and natural essence.',
-        `Apply ${config.technique.toLowerCase()} for enhancement only, not alteration,`,
-        'preserving the authentic look and personality.',
-        'Format as poster with white margins and text space.',
-        'Do not add any text to the image.'
-      ].join(' ')
+      id: 'simple-style',
+      name: 'Simple Style',
+      prompt: `Apply ${config.medium} artistic style to this pet portrait. ${config.technique} Capture the animal's personality and distinctive features. Create poster format with white borders and keep bottom 20% empty for text.`
     },
     {
-      id: 'artistic-portrait',
-      name: 'Artistic Portrait',
-      prompt: [
-        `Render this portrait in ${config.medium} artistic style while maintaining exact facial characteristics.`,
-        'Preserve the subject\'s natural features and distinctive traits.',
-        `Use ${config.technique.toLowerCase()} to enhance without changing core appearance.`,
-        'Keep authentic details and recognizable qualities intact.',
-        'Create poster format with margins and space for text.',
-        'Do not include any text.'
-      ].join(' ')
+      id: 'artistic-version',
+      name: 'Artistic Version', 
+      prompt: `Transform into ${config.medium} pet artwork using ${config.technique.toLowerCase()} Show the animal's character and unique markings. Format as poster with margins and bottom 20% reserved for text.`
     },
     {
-      id: 'commemorative',
-      name: 'Commemorative Artwork',
-      prompt: [
-        `Transform this portrait into commemorative ${config.medium} artwork preserving all identifying features.`,
-        'Maintain the subject\'s unique characteristics and natural appearance.',
-        `Apply ${config.technique.toLowerCase()} while keeping original details unchanged.`,
-        'Honor their authentic look and distinctive qualities.',
-        'Format with white borders and bottom text area.',
-        'No text should be added.'
-      ].join(' ')
+      id: 'style-transfer',
+      name: 'Style Transfer',
+      prompt: `Convert to ${config.medium} style pet portrait. Use ${config.technique.toLowerCase()} Emphasize breed characteristics and personality. Poster layout with white borders and empty bottom 20% for text.`
     },
     {
-      id: 'keepsake',
-      name: 'Keepsake Portrait',
-      prompt: [
-        `Create a ${config.medium} keepsake portrait capturing every detail of this cherished subject.`,
-        'Preserve their recognizable features and natural essence completely.',
-        `Use ${config.technique.toLowerCase()} for artistic enhancement without altering identity.`,
-        'Maintain authentic appearance and distinctive characteristics.',
-        'Design as poster with white margins and text space.',
-        'Do not add text to the image.'
-      ].join(' ')
+      id: 'pet-memories',
+      name: 'Pet Memories',
+      prompt: `Create ${config.medium} memorial portrait of this beloved pet. ${config.technique} Honor their unique features and loving spirit. Format with bottom 20% kept empty for memorial text.`
     }
   ];
 };

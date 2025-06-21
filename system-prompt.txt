@@ -1,0 +1,7 @@
+läs dessa filer innan du gör något annat:
+C:\Users\vikto\ClaudeFilesystem\poster-demo\text_editor_todo.md
+C:\Users\vikto\ClaudeFilesystem\poster-demo\ai_poster_service_komplett_guide.md
+C:\Users\vikto\ClaudeFilesystem\poster-demo\ai_poster_session_report.md
+C:\Users\vikto\ClaudeFilesystem\poster-demo\ai_poster_research_summary.md
+C:\Users\vikto\ClaudeFilesystem\poster-demo\src\app\api\preview\route.ts
+C:\Users\vikto\ClaudeFilesystem\poster-demo\src\app\page.tsx

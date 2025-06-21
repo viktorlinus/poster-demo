@@ -13,6 +13,7 @@ export default function Home() {
   const [file, setFile] = useState<File>();
   const [loading, setLoading] = useState(false);
   const [style, setStyle] = useState(DEFAULT_STYLE);
+  const [useVisionGenerate, setUseVisionGenerate] = useState(false);
 
   // Flytta generateMemoryPrompts anrop här så TypeScript ser att den används
   const getMemoryPrompts = () => generateMemoryPrompts(style);
@@ -37,6 +38,7 @@ export default function Home() {
         formData.append('file', file);
         formData.append('style', style);
         formData.append('customPrompt', promptData.prompt);
+        formData.append('useVisionGenerate', useVisionGenerate.toString());
         
         try {
           const res = await fetch('/api/preview', { 
@@ -56,7 +58,7 @@ export default function Home() {
           
           return {
             url: data.url || '',
-            promptName: promptData.name,
+            promptName: promptData.name
           };
         } catch {
           return {
@@ -80,12 +82,12 @@ export default function Home() {
 
   return (
     <main className="max-w-md mx-auto mt-16 p-6">
-      <h1 className="text-3xl font-bold mb-8 text-center">AI-Poster MVP</h1>
+      <h1 className="text-3xl font-bold mb-8 text-center">Pet Memories - AI Poster MVP</h1>
       
       <div className="space-y-6">
         <div>
           <label className="block text-sm font-medium mb-2">
-            Ladda upp spädbarnsporträtt
+            Ladda upp husdjursporträtt
           </label>
           <input 
             type="file" 
@@ -93,6 +95,40 @@ export default function Home() {
             onChange={e => setFile(e.target.files?.[0])}
             className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
           />
+        </div>
+        
+        <div>
+          <label className="block text-sm font-medium mb-2">
+            Metod
+          </label>
+          <div className="flex gap-4">
+            <label className="flex items-center">
+              <input 
+                type="radio" 
+                name="method" 
+                checked={!useVisionGenerate}
+                onChange={() => setUseVisionGenerate(false)}
+                className="mr-2"
+              />
+              Edit (nuvarande)
+            </label>
+            <label className="flex items-center">
+              <input 
+                type="radio" 
+                name="method" 
+                checked={useVisionGenerate}
+                onChange={() => setUseVisionGenerate(true)}
+                className="mr-2"
+              />
+              Vision + Generate (ny)
+            </label>
+          </div>
+          <p className="text-sm text-gray-600 mt-1">
+            {useVisionGenerate 
+              ? "Använder GPT-4.1-mini för att beskriva husdjuret, sedan genererar ny konstbild"
+              : "Redigerar originalbilden direkt med gpt-image-1"
+            }
+          </p>
         </div>
         
         <div>
@@ -117,13 +153,13 @@ export default function Home() {
           disabled={!file || loading}
           className="w-full bg-blue-500 text-white py-3 px-6 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-blue-600 font-semibold"
         >
-          {loading ? `Genererar 4 ${getStyleDisplayName(style)}-varianter...` : 'Generera 4 varianter (jämför prompts)'}
+          {loading ? `Genererar 4 ${getStyleDisplayName(style)}-varianter med ${useVisionGenerate ? 'Vision + Generate' : 'Edit'}-metoden...` : `Generera 4 varianter (${useVisionGenerate ? 'Vision + Generate' : 'Edit'})`}
         </button>
       </div>
 
       {previewResults && (
         <div className="mt-8">
-          <h2 className="text-lg font-semibold mb-4">Dina AI-genererade poster-varianter:</h2>
+          <h2 className="text-lg font-semibold mb-4">Dina AI-genererade husdjursposters:</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {previewResults.map((result, index) => (
               <div key={index} className="border-2 border-gray-300 rounded-lg p-4">
