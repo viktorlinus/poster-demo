@@ -1,12 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { OpenAI } from 'openai';
 import { toFile } from 'openai/uploads';
+import { generateStylePrompt, DEFAULT_STYLE, isValidStyle } from '@/lib/styles';
 
 export async function POST(request: NextRequest) {
   try {
     // Använd inbyggd FormData API istället för formidable
     const formData = await request.formData();
     const file = formData.get('file') as File | null;
+    const rawStyle = formData.get('style') as string || DEFAULT_STYLE;
+    const style = isValidStyle(rawStyle) ? rawStyle : DEFAULT_STYLE;
 
     if (!file) {
       return NextResponse.json({ error: 'No file uploaded' }, { status: 400 });
@@ -49,11 +52,13 @@ export async function POST(request: NextRequest) {
       apiKey: process.env.OPENAI_API_KEY! 
     });
 
+
+
     // GPT Image 1 med toFile - garanterat typ-säkert
     const response = await openai.images.edit({
       model: 'gpt-image-1',
       image: imageFile,
-      prompt: 'Transform this baby photo into a delicate watercolor birth poster with soft pastel washes, white margins, and an artistic tender style suitable for a nursery. Make it look like a beautiful commemorative artwork.',
+      prompt: generateStylePrompt(style),
       size: '1024x1536',
       quality: 'low',
       n: 1

@@ -1,10 +1,14 @@
 'use client';
 import { useState } from 'react';
+import { STYLE_CONFIGS, DEFAULT_STYLE, getStyleDisplayName } from '@/lib/styles';
 
 export default function Home() {
   const [preview, setPreview] = useState<string>();
   const [file, setFile] = useState<File>();
   const [loading, setLoading] = useState(false);
+  const [style, setStyle] = useState(DEFAULT_STYLE);
+
+
 
   const handleClick = async () => {
     if (!file) {
@@ -14,6 +18,7 @@ export default function Home() {
     setLoading(true);
     const formData = new FormData();
     formData.append('file', file);
+    formData.append('style', style);
 
     try {
       const res = await fetch('/api/preview', { 
@@ -58,12 +63,29 @@ export default function Home() {
           />
         </div>
         
+        <div>
+          <label className="block text-sm font-medium mb-2">
+            Välj konststil
+          </label>
+          <select 
+            value={style}
+            onChange={e => setStyle(e.target.value)}
+            className="block w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          >
+            {Object.entries(STYLE_CONFIGS).map(([key, config]) => (
+              <option key={key} value={key}>
+                {config.displayName}
+              </option>
+            ))}
+          </select>
+        </div>
+        
         <button 
           onClick={handleClick}
           disabled={!file || loading}
           className="w-full bg-blue-500 text-white py-3 px-6 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-blue-600 font-semibold"
         >
-          {loading ? 'Genererar akvarell-poster...' : 'Förhandsgranska (gratis)'}
+          {loading ? `Genererar ${getStyleDisplayName(style)}-poster...` : 'Förhandsgranska (gratis)'}
         </button>
       </div>
 
@@ -76,7 +98,7 @@ export default function Home() {
             className="w-full border-2 border-gray-300 rounded-lg shadow-md"
           />
           <p className="text-sm text-gray-600 mt-2">
-            Detta är en låg-kvalitets förhandsvisning. Final poster blir högupplöst.
+            Detta är en låg-kvalitets förhandsvisning i {getStyleDisplayName(style)}-stil. Final poster blir högupplöst.
           </p>
         </div>
       )}

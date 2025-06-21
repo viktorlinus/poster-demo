@@ -163,7 +163,7 @@ const [finalImage, setFinalImage] = useState<string>();
 
 ## 📋 Implementation Checklist
 
-### Grundfunktionalitet
+### Core Features - Grundfunktionalitet
 - [ ] Lägg till style dropdown
 - [ ] Skicka style med FormData  
 - [ ] Uppdatera API prompt med style + "no text" instruktion
@@ -177,6 +177,28 @@ const [finalImage, setFinalImage] = useState<string>();
 - [ ] Text positionering (bottom area)
 - [ ] Export till PNG funktion
 - [ ] Integrera i main page flow
+
+### Database & Storage - Datahantering
+- [ ] Sätta upp Supabase database
+- [ ] Skapa tabeller för generations (id, input_image_url, seed, prompt, output_image_url, created_at)
+- [ ] Implementera seed generation (heltal < 2³¹)
+- [ ] Spara alla generations i database för senare high-quality rendering
+- [ ] Bild-upload till Supabase Storage för input bilder
+- [ ] Bild-sparning för output URLs
+
+### File Validation - Filkontroller  
+- [ ] Kontrollera filstorlek < 20MB
+- [ ] Visa användarvänligt felmeddelande för för stora filer
+- [ ] Komprimera bilden client-side om för stor (valfritt)
+
+### A/B Testing System - Prompt Enhancement
+- [ ] Integrera OpenAI GPT-4o mini för prompt-analys
+- [ ] Skapa vision-analys av input bild
+- [ ] Generera förbättrad prompt baserat på bildinnehåll
+- [ ] Split-test: Original prompt vs Enhanced prompt
+- [ ] Side-by-side jämförelse av resultaten
+- [ ] Användare kan välja vilken version de föredrar
+- [ ] Spara A/B test resultat för analytics
 
 ### Styling & UX  
 - [ ] Responsive canvas design
@@ -205,12 +227,111 @@ const [finalImage, setFinalImage] = useState<string>();
 **Text Positioning:** Fixed bottom area (enklare än fritt placerbar)
 **Responsiveness:** Scale canvas baserat på viewport
 
-## ⏱️ Tidsuppskattning
-- Style dropdown: 30 min
-- Fabric.js setup: 2-3 timmar  
-- TextEditor komponent: 4-6 timmar
-- Integration och polish: 2-3 timmar
-- **Total: ~1-2 arbetsdagar**
+## 🗄️ Database Schema (Supabase)
+
+### `generations` table
+```sql
+CREATE TABLE generations (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  input_image_url TEXT NOT NULL,
+  seed INTEGER NOT NULL, -- < 2³¹ (2,147,483,647)
+  style TEXT NOT NULL,
+  original_prompt TEXT NOT NULL,
+  enhanced_prompt TEXT, -- från GPT-4o mini analys
+  output_image_url TEXT NOT NULL,
+  enhanced_output_url TEXT, -- A/B test version
+  user_preference TEXT, -- 'original' eller 'enhanced'
+  created_at TIMESTAMP DEFAULT NOW(),
+  session_id TEXT -- för att gruppera generationer
+);
+```
+
+### `ab_tests` table  
+```sql
+CREATE TABLE ab_tests (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  generation_id UUID REFERENCES generations(id),
+  test_type TEXT DEFAULT 'prompt_enhancement',
+  variant_a_url TEXT NOT NULL, -- original
+  variant_b_url TEXT NOT NULL, -- enhanced  
+  user_choice TEXT, -- 'a' eller 'b'
+  created_at TIMESTAMP DEFAULT NOW()
+);
+```
+
+## 🔧 Tekniska Implementationer
+
+### Seed Generation
+```ts
+// Generera seed < 2³¹
+const generateSeed = (): number => {
+  return Math.floor(Math.random() * 2147483647);
+};
+```
+
+### File Size Validation
+```ts
+// I frontend innan upload
+const validateFile = (file: File): boolean => {
+  const maxSize = 20 * 1024 * 1024; // 20MB
+  if (file.size > maxSize) {
+    alert(`Fil för stor: ${(file.size / 1024 / 1024).toFixed(1)}MB. Max 20MB tillåten.`);
+    return false;
+  }
+  return true;
+};
+```
+
+### Prompt Enhancement med GPT-4o Mini
+```ts
+// Ny API endpoint: /api/enhance-prompt
+const enhancePrompt = async (imageUrl: string, basePrompt: string) => {
+  const response = await openai.chat.completions.create({
+    model: "gpt-4o-mini",
+    messages: [
+      {
+        role: "user", 
+        content: [
+          {
+            type: "text",
+            text: `Analyze this baby photo and enhance this prompt for better artistic results: "${basePrompt}". Focus on the baby's features, lighting, mood, and suggest artistic improvements.`
+          },
+          {
+            type: "image_url",
+            image_url: { url: imageUrl }
+          }
+        ]
+      }
+    ],
+    max_tokens: 200
+  });
+  
+  return response.choices[0].message.content;
+};
+```
+
+### A/B Test Workflow
+```ts
+// 1. Generera både original och enhanced version
+const [originalResult, enhancedResult] = await Promise.all([
+  generateImage(originalPrompt, seed),
+  generateImage(enhancedPrompt, seed) // samma seed!
+]);
+
+// 2. Spara i database
+await supabase.from('generations').insert({
+  input_image_url,
+  seed,
+  style,
+  original_prompt,
+  enhanced_prompt,
+  output_image_url: originalResult.url,
+  enhanced_output_url: enhancedResult.url,
+  session_id
+});
+
+// 3. Visa side-by-side för användaren
+```
 
 ## 🚀 Nästa Session Prioritet
 1. Style dropdown (snabb win)
