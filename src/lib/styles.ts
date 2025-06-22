@@ -32,14 +32,9 @@ export const STYLE_CONFIGS: Record<string, StyleConfig> = {
     displayName: 'Pastellritning'
   },
   'digital art': {
-    medium: 'digital art',
-    technique: 'Use modern digital painting techniques with soft gradients.',
-    displayName: 'Digital konst'
-  },
-  'vintage photography': {
-    medium: 'vintage-style photographic',
-    technique: 'Apply sepia tones and classic photography aesthetics.',
-    displayName: 'Vintage fotografi'
+    medium: 'cartoon-style digital illustration',
+    technique: 'Use vibrant colors, playful cartoon aesthetics, and soft cel-shading techniques.',
+    displayName: 'Cartoon/Tecknad'
   }
 };
 
@@ -61,35 +56,73 @@ export const generateStylePrompt = (style: string): string => {
     `Apply ${config.medium} artistic style to this pet portrait.`,
     `${config.technique}`,
     'Capture the animal\'s personality and distinctive features.',
-    'Create poster format with white borders and keep bottom 20% empty for text.',
+    'Create poster format.',
     'No text.'
   ].join(' ');
 };
 
 // Extremt enkla, generiska prompts som borde fungera för alla bilder
+// Optimala prompt-kombinationer baserat på test-resultat
+const STYLE_OPTIMAL_PROMPTS: Record<string, PromptVariantId[]> = {
+  'watercolor': ['simple-style', 'simple-style-v2'],           // Simple Style vinnare
+  'pencil sketch': ['style-transfer', 'style-transfer-v2'],    // Style Transfer vinnare
+  'oil painting': ['style-transfer-v2', 'style-transfer'],     // Style Transfer v2 bäst
+  'charcoal drawing': ['simple-style', 'simple-style-v2'],    // Simple Style vinnare
+  'pastel drawing': ['style-transfer', 'style-transfer-v2'],   // Style Transfer vinnare
+  'digital art': ['style-transfer-v2', 'style-transfer']     // Style Transfer v2 vinnare för cartoon
+};
+
+// Alla tillgängliga prompt-varianter
+type PromptVariantId = 'simple-style' | 'simple-style-v2' | 'style-transfer' | 'style-transfer-v2';
+
+const ALL_PROMPT_VARIANTS: Record<PromptVariantId, {
+  name: string;
+  promptTemplate: (config: StyleConfig) => string;
+}> = {
+  'simple-style': {
+    name: 'Simple Style',
+    promptTemplate: (config: StyleConfig) => 
+      `Apply ${config.medium} artistic style to this pet portrait. ${config.technique} Capture the animal's personality and distinctive features. Create poster format.`
+  },
+  'simple-style-v2': {
+    name: 'Simple Style v2', 
+    promptTemplate: (config: StyleConfig) => 
+      `Transform this pet portrait into ${config.medium} art style. ${config.technique} Preserve the animal's unique facial features and expression. Poster format.`
+  },
+  'style-transfer': {
+    name: 'Style Transfer',
+    promptTemplate: (config: StyleConfig) => 
+      `Convert to ${config.medium} style pet portrait. Use ${config.technique.toLowerCase()} Emphasize breed characteristics and personality. Poster format.`
+  },
+  'style-transfer-v2': {
+    name: 'Style Transfer v2',
+    promptTemplate: (config: StyleConfig) => 
+      `Apply ${config.medium} artistic rendering to this pet image. ${config.technique} Maintain the pet's individual character and recognizable features. Poster format.`
+  }
+};
+
 export const generateMemoryPrompts = (style: string) => {
   const config = STYLE_CONFIGS[style] || STYLE_CONFIGS[DEFAULT_STYLE];
+  const optimalPrompts = STYLE_OPTIMAL_PROMPTS[style] || ['simple-style', 'style-transfer'];
   
-  return [
-    {
-      id: 'simple-style',
-      name: 'Simple Style',
-      prompt: `Apply ${config.medium} artistic style to this pet portrait. ${config.technique} Capture the animal's personality and distinctive features. Create poster format with white borders and keep bottom 20% empty for text.`
-    },
-    {
-      id: 'artistic-version',
-      name: 'Artistic Version', 
-      prompt: `Transform into ${config.medium} pet artwork using ${config.technique.toLowerCase()} Show the animal's character and unique markings. Format as poster with margins and bottom 20% reserved for text.`
-    },
-    {
-      id: 'style-transfer',
-      name: 'Style Transfer',
-      prompt: `Convert to ${config.medium} style pet portrait. Use ${config.technique.toLowerCase()} Emphasize breed characteristics and personality. Poster layout with white borders and empty bottom 20% for text.`
-    },
-    {
-      id: 'pet-memories',
-      name: 'Pet Memories',
-      prompt: `Create ${config.medium} memorial portrait of this beloved pet. ${config.technique} Honor their unique features and loving spirit. Format with bottom 20% kept empty for memorial text.`
-    }
-  ];
+  // Generera bara de 2 bästa promptserna för denna stil
+  return optimalPrompts.map(promptId => {
+    const variant = ALL_PROMPT_VARIANTS[promptId as PromptVariantId];
+    return {
+      id: promptId,
+      name: variant.name,
+      prompt: variant.promptTemplate(config)
+    };
+  });
+};
+
+// Legacy function för att testa alla 4 (för nya stilar som cartoon)
+export const generateAllPrompts = (style: string) => {
+  const config = STYLE_CONFIGS[style] || STYLE_CONFIGS[DEFAULT_STYLE];
+  
+  return Object.entries(ALL_PROMPT_VARIANTS).map(([promptId, variant]) => ({
+    id: promptId,
+    name: variant.name,
+    prompt: variant.promptTemplate(config)
+  }));
 };

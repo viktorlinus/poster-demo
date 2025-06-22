@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { OpenAI } from 'openai';
 import { toFile } from 'openai/uploads';
-import { generateStylePrompt, DEFAULT_STYLE, isValidStyle, generateMemoryPrompts } from '@/lib/styles';
+import { generateStylePrompt, DEFAULT_STYLE, isValidStyle } from '@/lib/styles';
 
 // Cache för att undvika att beskriva samma bild flera gånger
-let imageDescriptionCache: { [key: string]: string } = {};
+const imageDescriptionCache: { [key: string]: string } = {};
 
 function getImageCacheKey(file: File): string {
   // Använd filnamn + storlek som cache-nyckel
@@ -37,16 +37,15 @@ export async function POST(request: NextRequest) {
     });
 
     let imageUrl;
-    let imageDescription = null; // Cache för bildbeskrivning
 
     if (useVisionGenerate) {
       // NY STRATEGI: Vision + Generate
       
       // Steg 1: Kolla cache först
       const cacheKey = getImageCacheKey(file);
-      let imageDescription = imageDescriptionCache[cacheKey];
+      let cachedDescription = imageDescriptionCache[cacheKey];
       
-      if (!imageDescription) {
+      if (!cachedDescription) {
         // Bara kör vision om vi inte har cachen
         console.log('=== KÖR VISION API (första gången för denna bild) ===');
         
@@ -72,13 +71,13 @@ export async function POST(request: NextRequest) {
           max_tokens: 300
         });
 
-        imageDescription = visionResponse.choices[0]?.message?.content || '';
+        cachedDescription = visionResponse.choices[0]?.message?.content || '';
         
         // Spara i cache
-        imageDescriptionCache[cacheKey] = imageDescription;
+        imageDescriptionCache[cacheKey] = cachedDescription;
         
         console.log('Bildbeskrivning (cachad):');
-        console.log(imageDescription);
+        console.log(cachedDescription);
         console.log('=======================================');
       } else {
         console.log('=== ANVYÄNDER CACHAD BILDBESKRIVNING ===');
@@ -87,7 +86,7 @@ export async function POST(request: NextRequest) {
 
       // Steg 3: Använd beskrivningen för att generera ny bild
       const finalPrompt = customPrompt || generateStylePrompt(style);
-      const generatePrompt = `${imageDescription} - Transform into ${finalPrompt}`;
+      const generatePrompt = `${cachedDescription} - Transform into ${finalPrompt}`;
 
       // Logga bara den slutliga prompten
       console.log(`=== GENERATE PROMPT ===`);

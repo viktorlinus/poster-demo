@@ -1,6 +1,7 @@
 'use client';
 import { useState } from 'react';
 import { STYLE_CONFIGS, DEFAULT_STYLE, getStyleDisplayName, generateMemoryPrompts } from '@/lib/styles';
+import TextEditor from '@/components/TextEditor';
 
 interface PreviewResult {
   url: string;
@@ -14,9 +15,53 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [style, setStyle] = useState(DEFAULT_STYLE);
   const [useVisionGenerate, setUseVisionGenerate] = useState(false);
+  const [showTextEditor, setShowTextEditor] = useState(false);
+  const [selectedImage, setSelectedImage] = useState<string>();
 
-  // Flytta generateMemoryPrompts anrop här så TypeScript ser att den används
-  const getMemoryPrompts = () => generateMemoryPrompts(style);
+  // INGEN localStorage - bara håll i minnet under sessionen
+  const clearResults = () => {
+    setPreviewResults(undefined);
+    setShowTextEditor(false);
+    setSelectedImage(undefined);
+  };
+
+  // TEST-funktion: använd en dummy-bild för att testa text-editorn
+  const testTextEditor = () => {
+    const dummyImage = 'data:image/svg+xml;base64,' + btoa(`
+      <svg width="1024" height="1536" xmlns="http://www.w3.org/2000/svg">
+        <rect width="100%" height="100%" fill="#f0f8ff"/>
+        <circle cx="512" cy="400" r="150" fill="#8b4513"/>
+        <circle cx="450" cy="350" r="20" fill="#000"/>
+        <circle cx="574" cy="350" r="20" fill="#000"/>
+        <ellipse cx="512" cy="420" rx="30" ry="20" fill="#000"/>
+        <text x="512" y="1400" text-anchor="middle" font-size="48" fill="#666">TEST HUSDJUR - för text-editor</text>
+      </svg>
+    `);
+    
+    setSelectedImage(dummyImage);
+    setShowTextEditor(true);
+  };
+
+  // Direkt till text-editor med egen uppladdad bild
+  const testWithOwnImage = () => {
+    if (!file) {
+      alert('Ladda upp en bild först!');
+      return;
+    }
+    
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const imageUrl = e.target?.result as string;
+      setSelectedImage(imageUrl);
+      setShowTextEditor(true);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  // Alla stilar kör nu optimerade 2 prompts
+  const getMemoryPrompts = () => {
+    return generateMemoryPrompts(style); // Optimerade 2 prompts för alla stilar
+  };
 
 
 
@@ -80,9 +125,55 @@ export default function Home() {
     }
   };
 
+  // Visa text editor om vi har valt en bild
+  if (showTextEditor && selectedImage) {
+    return (
+      <TextEditor
+        backgroundImageUrl={selectedImage}
+        onSave={(dataUrl) => {
+          console.log('Slutlig poster skapad:', dataUrl);
+          // Här kan du visa download-länk eller spara
+          alert('Poster skapad! (kolla konsolen för dataUrl)');
+          setShowTextEditor(false);
+        }}
+        onCancel={() => setShowTextEditor(false)}
+      />
+    );
+  }
+
   return (
-    <main className="max-w-md mx-auto mt-16 p-6">
+    <main className="max-w-4xl mx-auto mt-16 p-6">
       <h1 className="text-3xl font-bold mb-8 text-center">Pet Memories - AI Poster MVP</h1>
+      
+      {/* UTVECKLINGS-KNAPP för att testa text-editorn */}
+      <div className="mb-6 p-4 bg-yellow-100 border border-yellow-400 rounded-lg">
+        <h3 className="font-bold text-yellow-800 mb-2">🛠️ UTVECKLING: Testa text-editorn</h3>
+        <div className="space-y-2">
+          <button 
+            onClick={testWithOwnImage}
+            disabled={!file}
+            className="w-full bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            📷 Använd min uppladdade bild i text-editorn
+          </button>
+          <button 
+            onClick={testTextEditor}
+            className="w-full bg-yellow-500 text-white py-2 px-4 rounded hover:bg-yellow-600 font-medium"
+          >
+            🎨 Eller använd dummy-bild
+          </button>
+        </div>
+        <p className="text-sm text-yellow-700 mt-2">Hoppa direkt till text-editorn utan AI-generering</p>
+      </div>
+      
+      {previewResults && (
+        <button 
+          onClick={clearResults}
+          className="mb-4 bg-gray-500 text-white py-1 px-3 rounded text-sm hover:bg-gray-600"
+        >
+          Rensa bilder (försvinner vid siduppdatering)
+        </button>
+      )}
       
       <div className="space-y-6">
         <div>
@@ -153,7 +244,10 @@ export default function Home() {
           disabled={!file || loading}
           className="w-full bg-blue-500 text-white py-3 px-6 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-blue-600 font-semibold"
         >
-          {loading ? `Genererar 4 ${getStyleDisplayName(style)}-varianter med ${useVisionGenerate ? 'Vision + Generate' : 'Edit'}-metoden...` : `Generera 4 varianter (${useVisionGenerate ? 'Vision + Generate' : 'Edit'})`}
+          {loading 
+            ? `Genererar 2 ${getStyleDisplayName(style)}-varianter med ${useVisionGenerate ? 'Vision + Generate' : 'Edit'}-metoden...` 
+            : `Generera 2 optimerade varianter (${useVisionGenerate ? 'Vision + Generate' : 'Edit'})`
+          }
         </button>
       </div>
 
@@ -169,11 +263,22 @@ export default function Home() {
                     <p className="text-sm">Fel: {result.error}</p>
                   </div>
                 ) : result.url ? (
-                  <img 
-                    src={result.url} 
-                    alt={`AI Generated Poster - ${result.promptName}`}
-                    className="w-full rounded-lg shadow-md"
-                  />
+                  <>
+                    <img 
+                      src={result.url} 
+                      alt={`AI Generated Poster - ${result.promptName}`}
+                      className="w-full rounded-lg shadow-md mb-3"
+                    />
+                    <button
+                      onClick={() => {
+                        setSelectedImage(result.url);
+                        setShowTextEditor(true);
+                      }}
+                      className="w-full bg-green-500 text-white py-2 px-4 rounded hover:bg-green-600 font-medium"
+                    >
+                      Lägg till text & personalisera
+                    </button>
+                  </>
                 ) : (
                   <div className="bg-gray-100 h-64 rounded-lg flex items-center justify-center">
                     <p className="text-gray-500">Ingen bild genererad</p>
