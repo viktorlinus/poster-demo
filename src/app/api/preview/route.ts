@@ -19,6 +19,7 @@ export async function POST(request: NextRequest) {
     const style = isValidStyle(rawStyle) ? rawStyle : DEFAULT_STYLE;
     const customPrompt = formData.get('customPrompt') as string || null;
     const useVisionGenerate = formData.get('useVisionGenerate') === 'true';
+    const quality = formData.get('quality') as 'low' | 'medium' | 'high' || 'low';
 
     if (!file) {
       return NextResponse.json({ error: 'No file uploaded' }, { status: 400 });
@@ -97,7 +98,7 @@ export async function POST(request: NextRequest) {
         model: 'gpt-image-1',
         prompt: generatePrompt,
         size: '1024x1536',
-        quality: 'low',
+        quality: quality,
         moderation: 'low', // Mindre restriktiva content filters
         n: 1
       });
@@ -117,7 +118,8 @@ export async function POST(request: NextRequest) {
       // Returnera med genererad prompt för debugging
       return NextResponse.json({ 
         url: imageUrl,
-        generatedPrompt: generatePrompt // Skicka tillbaka för debugging
+        generatedPrompt: generatePrompt, // Skicka tillbaka för debugging
+        quality: quality // Visa vilken kvalitet som användes
       });
 
     } else {
@@ -149,7 +151,7 @@ export async function POST(request: NextRequest) {
         image: imageFile,
         prompt: finalPrompt,
         size: '1024x1536',
-        quality: 'low',
+        quality: quality,
         n: 1
       });
 
@@ -166,7 +168,10 @@ export async function POST(request: NextRequest) {
       }
 
       // Returnera utan genererad prompt för edit-metoden
-      return NextResponse.json({ url: imageUrl });
+      return NextResponse.json({ 
+        url: imageUrl,
+        quality: quality // Visa vilken kvalitet som användes
+      });
     }
     
   } catch (error) {

@@ -2,11 +2,14 @@
 import { useState } from 'react';
 import { STYLE_CONFIGS, DEFAULT_STYLE, getStyleDisplayName, generateMemoryPrompts } from '@/lib/styles';
 import TextEditor from '@/components/TextEditor';
+import { upscaleImage } from '@/lib/upscale';
 
 interface PreviewResult {
   url: string;
   promptName: string;
   error?: string;
+  quality?: string;
+  upscaled?: boolean;
 }
 
 export default function Home() {
@@ -15,8 +18,35 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [style, setStyle] = useState(DEFAULT_STYLE);
   const [useVisionGenerate, setUseVisionGenerate] = useState(false);
+  const [quality, setQuality] = useState<'low' | 'medium' | 'high'>('low');
+  const [upscaling, setUpscaling] = useState<{[key: number]: boolean}>({});
   const [showTextEditor, setShowTextEditor] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string>();
+
+  // Upscale funktion
+  const handleUpscale = async (index: number, imageUrl: string) => {
+    setUpscaling(prev => ({ ...prev, [index]: true }));
+    
+    try {
+      const upscaledUrl = await upscaleImage(imageUrl);
+      
+      // Uppdatera resultatet med upscaled version
+      setPreviewResults(prev => 
+        prev?.map((result, i) => 
+          i === index 
+            ? { ...result, url: upscaledUrl, upscaled: true }
+            : result
+        )
+      );
+      
+      alert('Bild uppskalad! 4x högre upplösning ✨');
+    } catch (error) {
+      console.error('Upscaling error:', error);
+      alert('Uppskalning misslyckades. Försök igen.');
+    } finally {
+      setUpscaling(prev => ({ ...prev, [index]: false }));
+    }
+  };
 
   // INGEN localStorage - bara håll i minnet under sessionen
   const clearResults = () => {
@@ -84,6 +114,7 @@ export default function Home() {
         formData.append('style', style);
         formData.append('customPrompt', promptData.prompt);
         formData.append('useVisionGenerate', useVisionGenerate.toString());
+        formData.append('quality', quality);
         
         try {
           const res = await fetch('/api/preview', { 
@@ -103,7 +134,8 @@ export default function Home() {
           
           return {
             url: data.url || '',
-            promptName: promptData.name
+            promptName: promptData.name,
+            quality: data.quality
           };
         } catch {
           return {
@@ -224,6 +256,47 @@ export default function Home() {
         
         <div>
           <label className="block text-sm font-medium mb-2">
+            Bildkvalitet
+          </label>
+          <div className="flex gap-4 mb-4">
+            <label className="flex items-center">
+              <input 
+                type="radio" 
+                name="quality" 
+                value="low"
+                checked={quality === 'low'}
+                onChange={e => setQuality(e.target.value as 'low' | 'medium' | 'high')}
+                className="mr-2"
+              />
+              Low
+            </label>
+            <label className="flex items-center">
+              <input 
+                type="radio" 
+                name="quality" 
+                value="medium"
+                checked={quality === 'medium'}
+                onChange={e => setQuality(e.target.value as 'low' | 'medium' | 'high')}
+                className="mr-2"
+              />
+              Medium
+            </label>
+            <label className="flex items-center">
+              <input 
+                type="radio" 
+                name="quality" 
+                value="high"
+                checked={quality === 'high'}
+                onChange={e => setQuality(e.target.value as 'low' | 'medium' | 'high')}
+                className="mr-2"
+              />
+              High
+            </label>
+          </div>
+        </div>
+        
+        <div>
+          <label className="block text-sm font-medium mb-2">
             Välj konststil
           </label>
           <select 
@@ -245,8 +318,8 @@ export default function Home() {
           className="w-full bg-blue-500 text-white py-3 px-6 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-blue-600 font-semibold"
         >
           {loading 
-            ? `Genererar 2 ${getStyleDisplayName(style)}-varianter med ${useVisionGenerate ? 'Vision + Generate' : 'Edit'}-metoden...` 
-            : `Generera 2 optimerade varianter (${useVisionGenerate ? 'Vision + Generate' : 'Edit'})`
+            ? `Genererar 2 ${getStyleDisplayName(style)}-varianter (${quality} quality)...` 
+            : `Generera 2 optimerade varianter (${quality} quality)`
           }
         </button>
       </div>
@@ -257,7 +330,21 @@ export default function Home() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {previewResults.map((result, index) => (
               <div key={index} className="border-2 border-gray-300 rounded-lg p-4">
-                <h3 className="font-medium mb-2">{result.promptName}</h3>
+                <h3 className="font-medium mb-2">
+                  {result.promptName}
+                  <div className="flex gap-2 mt-1">
+                    {result.quality && (
+                      <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
+                        {result.quality} quality
+                      </span>
+                    )}
+                    {result.upscaled && (
+                      <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">
+                        4x upscaled
+                      </span>
+                    )}
+                  </div>
+                </h3>
                 {result.error ? (
                   <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
                     <p className="text-sm">Fel: {result.error}</p>
@@ -269,15 +356,27 @@ export default function Home() {
                       alt={`AI Generated Poster - ${result.promptName}`}
                       className="w-full rounded-lg shadow-md mb-3"
                     />
-                    <button
-                      onClick={() => {
-                        setSelectedImage(result.url);
-                        setShowTextEditor(true);
-                      }}
-                      className="w-full bg-green-500 text-white py-2 px-4 rounded hover:bg-green-600 font-medium"
-                    >
-                      Lägg till text & personalisera
-                    </button>
+                    <div className="space-y-2">
+                      <button
+                        onClick={() => {
+                          setSelectedImage(result.url);
+                          setShowTextEditor(true);
+                        }}
+                        className="w-full bg-green-500 text-white py-2 px-4 rounded hover:bg-green-600 font-medium"
+                      >
+                        Lägg till text & personalisera
+                      </button>
+                      
+                      {!result.upscaled && (
+                        <button
+                          onClick={() => handleUpscale(index, result.url)}
+                          disabled={upscaling[index]}
+                          className="w-full bg-purple-500 text-white py-2 px-4 rounded hover:bg-purple-600 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          {upscaling[index] ? 'Uppskalerar... (30-60s)' : '🚀 Upskala till 4x kvalitet'}
+                        </button>
+                      )}
+                    </div>
                   </>
                 ) : (
                   <div className="bg-gray-100 h-64 rounded-lg flex items-center justify-center">
@@ -288,7 +387,7 @@ export default function Home() {
             ))}
           </div>
           <p className="text-sm text-gray-600 mt-4 text-center">
-            Detta är låg-kvalitets förhandsvisningar i {getStyleDisplayName(style)}-stil. Jämför resultaten för att se vilken prompt som bevarar likheten bäst!
+            Detta är {quality}-kvalitets förhandsvisningar i {getStyleDisplayName(style)}-stil. Jämför resultaten för att se vilken prompt som bevarar likheten bäst!
           </p>
         </div>
       )}

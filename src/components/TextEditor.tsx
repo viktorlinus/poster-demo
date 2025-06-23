@@ -1,5 +1,6 @@
 'use client';
 import { useEffect, useRef, useState } from 'react';
+import { upscaleImage } from '@/lib/upscale';
 
 interface TextEditorProps {
   backgroundImageUrl: string;
@@ -19,6 +20,8 @@ export default function TextEditor({ backgroundImageUrl, onSave, onCancel }: Tex
   const [imageScale, setImageScale] = useState(0.75); // Lämna 25% plats för text
   const [textSpacing, setTextSpacing] = useState(20); // Avstånd mellan texterna
   const [backgroundColor, setBackgroundColor] = useState('#ffffff'); // Bakgrundsfärg
+  const [upscaling, setUpscaling] = useState(false);
+  const [upscaledBackgroundUrl, setUpscaledBackgroundUrl] = useState<string | null>(null);
 
   const canvasWidth = 1024;
   const canvasHeight = 1536;
@@ -35,6 +38,25 @@ export default function TextEditor({ backgroundImageUrl, onSave, onCancel }: Tex
   ];
 
   const [backgroundImage, setBackgroundImage] = useState<HTMLImageElement | null>(null);
+
+  // Hantera upscaling av bakgrundsbild
+  const handleUpscaleBackground = async () => {
+    setUpscaling(true);
+    
+    try {
+      const upscaledUrl = await upscaleImage(backgroundImageUrl);
+      setUpscaledBackgroundUrl(upscaledUrl);
+      alert('Bakgrundsbild uppskalad till 4x kvalitet! ✨');
+    } catch (error) {
+      console.error('Upscaling error:', error);
+      alert('Uppskalning misslyckades. Försök igen.');
+    } finally {
+      setUpscaling(false);
+    }
+  };
+
+  // Använd upscaled version om den finns
+  const currentBackgroundUrl = upscaledBackgroundUrl || backgroundImageUrl;
 
   // Ladda Google Fonts dynamiskt
   useEffect(() => {
@@ -69,8 +91,8 @@ export default function TextEditor({ backgroundImageUrl, onSave, onCancel }: Tex
     img.onload = () => {
       setBackgroundImage(img);
     };
-    img.src = backgroundImageUrl;
-  }, [backgroundImageUrl]);
+    img.src = currentBackgroundUrl;
+  }, [currentBackgroundUrl]);
 
   // Rita canvas när något ändras
   useEffect(() => {
@@ -351,6 +373,26 @@ export default function TextEditor({ backgroundImageUrl, onSave, onCancel }: Tex
             </div>
           </div>
 
+          {/* Bakgrundsbild upscaling */}
+          <div className="p-4 bg-purple-50 border border-purple-200 rounded-lg">
+            <h4 className="font-bold text-purple-800 mb-2">🚀 Förbättra bildkvalitet</h4>
+            <p className="text-sm text-purple-700 mb-3">
+              {upscaledBackgroundUrl 
+                ? "Bakgrundsbild har uppskalats till 4x kvalitet!" 
+                : "Upskala bakgrundsbilden för bättre print-kvalitet"
+              }
+            </p>
+            {!upscaledBackgroundUrl && (
+              <button
+                onClick={handleUpscaleBackground}
+                disabled={upscaling}
+                className="w-full bg-purple-500 text-white py-2 px-4 rounded hover:bg-purple-600 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {upscaling ? 'Uppskalerar... (30-60s)' : '🚀 Upskala bakgrundsbild'}
+              </button>
+            )}
+          </div>
+
           {/* Knappar */}
           <div className="space-y-3">
             <button
@@ -358,6 +400,9 @@ export default function TextEditor({ backgroundImageUrl, onSave, onCancel }: Tex
               className="w-full bg-green-500 text-white py-3 px-6 rounded-lg hover:bg-green-600 font-medium"
             >
               📥 Ladda ner poster
+              {upscaledBackgroundUrl && (
+                <span className="ml-2 text-xs">(4x kvalitet)</span>
+              )}
             </button>
             
             <button
