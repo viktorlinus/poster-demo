@@ -3,38 +3,45 @@ export interface StyleConfig {
   medium: string;
   technique: string;
   displayName: string;
+  emoji?: string;
 }
 
 export const STYLE_CONFIGS: Record<string, StyleConfig> = {
   watercolor: {
     medium: 'watercolor',
     technique: 'Use soft pastel washes and gentle watercolor techniques.',
-    displayName: 'Akvarell'
+    displayName: 'Akvarell',
+    emoji: '🎨'
   },
   'pencil sketch': {
     medium: 'pencil sketch',
     technique: 'Use delicate graphite strokes and soft shading.',
-    displayName: 'Blyerts'
+    displayName: 'Blyerts',
+    emoji: '✏️'
   },
   'oil painting': {
     medium: 'oil painting',
     technique: 'Use rich textures and classical painting techniques.',
-    displayName: 'Oljemålning'
+    displayName: 'Oljemålning',
+    emoji: '🖌️'
   },
   'charcoal drawing': {
     medium: 'charcoal drawing',
     technique: 'Use soft charcoal strokes and gentle smudging.',
-    displayName: 'Kolritning'
+    displayName: 'Kolritning',
+    emoji: '⚫'
   },
   'pastel drawing': {
     medium: 'pastel drawing',
     technique: 'Use soft pastel colors and gentle blending.',
-    displayName: 'Pastellritning'
+    displayName: 'Pastellritning',
+    emoji: '🌈'
   },
   'digital art': {
     medium: 'cartoon-style digital illustration',
     technique: 'Use vibrant colors, playful cartoon aesthetics, and soft cel-shading techniques.',
-    displayName: 'Cartoon/Tecknad'
+    displayName: 'Cartoon/Tecknad',
+    emoji: '💻'
   }
 };
 

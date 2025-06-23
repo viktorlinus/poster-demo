@@ -1,95 +1,54 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-export async function POST(request: NextRequest) {
-  try {
-    const { imageUrl, scale = 4 } = await request.json();
+export const runtime = 'nodejs';          // körs som Node (inte Edge)
+export const maxDuration = 10;          // s (Hobby = 10, Pro = 60)
 
-    if (!imageUrl) {
-      return NextResponse.json({ error: 'No image URL provided' }, { status: 400 });
-    }
+const REPLICATE = 'https://api.replicate.com/v1/predictions';
+const VERSION =
+  'c15c48c0e85a93f3d4e283ac6ca684ce180d94d1975783663c747e7bfa6f5e5c';
+const TOKEN = process.env.REPLICATE_API_TOKEN!;
 
-    if (!process.env.REPLICATE_API_TOKEN) {
-      return NextResponse.json({ error: 'Replicate API token not configured' }, { status: 500 });
-    }
+/* -------- POST /api/upscale  --------
+   Skapa prediction och returnera ID  */
+export async function POST(req: NextRequest) {
+  const { imageUrl, scale = 4 } = await req.json();
 
-    console.log('=== ESRGAN UPSCALING START ===');
-    console.log('Image URL:', imageUrl);
-    console.log('Scale:', scale);
+  if (!imageUrl)
+    return NextResponse.json({ error: 'No image URL' }, { status: 400 });
 
-    // Steg 1: Skapa prediction med standard API
-    const response = await fetch('https://api.replicate.com/v1/predictions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Token ${process.env.REPLICATE_API_TOKEN}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        version: "c15c48c0e85a93f3d4e283ac6ca684ce180d94d1975783663c747e7bfa6f5e5c",
-        input: {
-          image: imageUrl,
-          scale: scale
-        }
-      })
-    });
+  const res = await fetch(REPLICATE, {
+    method: 'POST',
+    headers: {
+      Authorization: `Token ${TOKEN}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      version: VERSION,
+      input: { image: imageUrl, scale },
+    }),
+  });
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('Replicate API error:', errorText);
-      return NextResponse.json({ error: `Replicate API error: ${response.statusText}` }, { status: 500 });
-    }
+  if (!res.ok)
+    return NextResponse.json({ error: await res.text() }, { status: 502 });
 
-    const prediction = await response.json();
-    console.log('Prediction created:', prediction.id);
+  const prediction = await res.json();
+  return NextResponse.json({ id: prediction.id, status: prediction.status });
+}
 
-    // Steg 2: Poll för resultat
-    let result = prediction;
-    let attempts = 0;
-    const maxAttempts = 60; // 60 sekunder timeout
+/* -------- GET /api/upscale?id=xxx --------
+   Klienten pollar status                */
+export async function GET(req: NextRequest) {
+  const id = new URL(req.url).searchParams.get('id');
+  if (!id)
+    return NextResponse.json({ error: 'Missing id' }, { status: 400 });
 
-    while (result.status !== 'succeeded' && result.status !== 'failed' && attempts < maxAttempts) {
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      const pollResponse = await fetch(`https://api.replicate.com/v1/predictions/${result.id}`, {
-        headers: {
-          'Authorization': `Token ${process.env.REPLICATE_API_TOKEN}`,
-        }
-      });
-      
-      if (!pollResponse.ok) {
-        console.error('Polling failed:', pollResponse.statusText);
-        break;
-      }
-      
-      result = await pollResponse.json();
-      attempts++;
-      
-      console.log(`Polling attempt ${attempts}: ${result.status}`);
-    }
+  const res = await fetch(`${REPLICATE}/${id}`, {
+    headers: { Authorization: `Token ${TOKEN}` },
+  });
 
-    if (result.status === 'failed') {
-      console.error('Upscaling failed:', result.error);
-      return NextResponse.json({ error: 'Upscaling failed' }, { status: 500 });
-    }
+  if (!res.ok)
+    return NextResponse.json({ error: await res.text() }, { status: 502 });
 
-    if (result.status !== 'succeeded') {
-      console.error('Upscaling timeout');
-      return NextResponse.json({ error: 'Upscaling timeout' }, { status: 500 });
-    }
-
-    console.log('=== ESRGAN UPSCALING SUCCESS ===');
-    console.log('Upscaled URL:', result.output);
-
-    return NextResponse.json({ 
-      upscaledUrl: result.output,
-      originalUrl: imageUrl,
-      scale: scale
-    });
-
-  } catch (error) {
-    console.error('Upscaling error:', error);
-    return NextResponse.json({ 
-      error: 'Failed to upscale image',
-      details: error instanceof Error ? error.message : 'Unknown error'
-    }, { status: 500 });
-  }
+  const data = await res.json();
+  return NextResponse.json(data);
 }

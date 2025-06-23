@@ -162,12 +162,7 @@ export default function Home() {
     return (
       <TextEditor
         backgroundImageUrl={selectedImage}
-        onSave={(dataUrl) => {
-          console.log('Slutlig poster skapad:', dataUrl);
-          // Här kan du visa download-länk eller spara
-          alert('Poster skapad! (kolla konsolen för dataUrl)');
-          setShowTextEditor(false);
-        }}
+        style={style}
         onCancel={() => setShowTextEditor(false)}
       />
     );

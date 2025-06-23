@@ -1,35 +1,30 @@
-// ESRGAN Upscaling Implementation
-// Alternativ till OpenAI medium/high quality
+// lib/upscale.ts
+/**
+ * Skicka in bild-URL och få tillbaka upscaled URL.
+ * Klienten pollar /api/upscale tills status = "succeeded".
+ */
+export async function upscaleImage(imageUrl: string, scale = 4) {
+  // 1) Starta prediction
+  const start = await fetch('/api/upscale', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ imageUrl, scale }),
+  });
 
-export async function upscaleImage(imageUrl: string, scale: number = 4): Promise<string> {
-  try {
-    // Replicate ESRGAN (billigast)
-    const response = await fetch('/api/upscale', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        imageUrl,
-        scale
-      })
-    });
+  if (!start.ok) throw new Error(await start.text());
+  const { id } = await start.json();
 
-    if (!response.ok) {
-      throw new Error(`Upscaling failed: ${response.statusText}`);
-    }
+  // 2) Polla status
+  let tries = 0;
+  while (tries < 120) {           // max ~2 min
+    await new Promise(r => setTimeout(r, 1000));
+    const res = await fetch(`/api/upscale?id=${id}`);
+    if (!res.ok) throw new Error(await res.text());
 
-    const result = await response.json();
-    
-    if (result.error) {
-      throw new Error(result.error);
-    }
-
-    return result.upscaledUrl;
-  } catch (error) {
-    console.error('Upscaling error:', error);
-    throw error;
+    const data = await res.json();
+    if (data.status === 'succeeded') return data.output as string;
+    if (data.status === 'failed') throw new Error('Upscaling failed');
+    tries++;
   }
+  throw new Error('Upscaling timeout on client');
 }
-
-// Kostnad: ~$0.01 per upscaling (vs $0.035+ för OpenAI medium)
