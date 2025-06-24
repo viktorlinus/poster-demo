@@ -2,11 +2,10 @@ import { RefObject } from 'react';
 
 interface CanvasPreviewProps {
   canvasRef: RefObject<HTMLCanvasElement | null>;
-  canvasWidth: number;
-  canvasHeight: number;
+  canvasKey: string;
 }
 
-export default function CanvasPreview({ canvasRef, canvasWidth, canvasHeight }: CanvasPreviewProps) {
+export default function CanvasPreview({ canvasRef, canvasKey }: CanvasPreviewProps) {
   return (
     <div className="bg-white rounded-lg shadow-lg p-4">
       <div className="hidden lg:block mb-3">
@@ -23,8 +22,7 @@ export default function CanvasPreview({ canvasRef, canvasWidth, canvasHeight }: 
         <div className="border-2 border-gray-300 rounded-lg overflow-hidden bg-white relative" style={{ maxWidth: '350px' }}>
           <canvas 
             ref={canvasRef}
-            width={canvasWidth}
-            height={canvasHeight}
+            key={canvasKey}
             className="w-full h-auto"
           />
           {/* Extra skydd - HTML overlay */}

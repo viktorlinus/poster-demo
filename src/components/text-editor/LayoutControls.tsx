@@ -3,6 +3,8 @@ import { useState } from 'react';
 interface LayoutControlsProps {
   imageScale: number;
   setImageScale: (scale: number) => void;
+  imageVerticalPosition: number;
+  setImageVerticalPosition: (position: number) => void;
   backgroundColor: string;
   setBackgroundColor: (color: string) => void;
   showText: boolean;
@@ -11,16 +13,16 @@ interface LayoutControlsProps {
 export default function LayoutControls({
   imageScale,
   setImageScale,
+  imageVerticalPosition,
+  setImageVerticalPosition,
   backgroundColor,
   setBackgroundColor,
   showText
 }: LayoutControlsProps) {
   const [showAdvanced, setShowAdvanced] = useState(false);
 
-  // Om text är av, visa inte layout-kontroller
-  if (!showText) {
-    return null;
-  }
+  // Visa layout-kontroller både när text är på och av (för bildposition)
+  // Om text är av, dölj bara bakgrunds-kontroller och visa bara bildkontroller
 
   return (
     <div className="space-y-3">
@@ -30,70 +32,96 @@ export default function LayoutControls({
 
       {/* Vanligaste kontroller */}
       <div className="space-y-3">
-        <div>
-          <label className="block text-xs font-medium text-gray-700 mb-1">
-            Bildstorlek
-          </label>
-          <div className="flex items-center gap-2">
-            <input
-              type="range"
-              min="0.5"
-              max="0.9"
-              step="0.05"
-              value={imageScale}
-              onChange={(e) => setImageScale(Number(e.target.value))}
-              className="flex-1 h-1"
-            />
-            <span className="text-xs font-medium text-blue-600 w-10 text-right">
-              {Math.round(imageScale * 100)}%
-            </span>
+        {/* Bildstorlek och Bildposition i två kolumner */}
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className="block text-xs font-medium text-gray-700 mb-1">
+              Bildstorlek
+            </label>
+            <div className="flex items-center gap-2">
+              <input
+                type="range"
+                min="0.5"
+                max="0.9"
+                step="0.05"
+                value={imageScale}
+                onChange={(e) => setImageScale(Number(e.target.value))}
+                className="flex-1 h-1"
+              />
+              <span className="text-xs font-medium text-blue-600 w-10 text-right">
+                {Math.round(imageScale * 100)}%
+              </span>
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-xs font-medium text-gray-700 mb-1">
+              Bildposition ↕
+            </label>
+            <div className="flex items-center gap-2">
+              <input
+                type="range"
+                min="0"
+                max="1"
+                step="0.1"
+                value={imageVerticalPosition}
+                onChange={(e) => setImageVerticalPosition(Number(e.target.value))}
+                className="flex-1 h-1"
+              />
+              <span className="text-xs font-medium text-blue-600 w-10 text-right">
+                {imageVerticalPosition === 0 ? 'Topp' : imageVerticalPosition === 0.5 ? 'Mitt' : imageVerticalPosition === 1 ? 'Bott' : Math.round(imageVerticalPosition * 100) + '%'}
+              </span>
+            </div>
           </div>
         </div>
 
-        <div>
-          <label className="block text-xs font-medium text-gray-700 mb-1">Bakgrund</label>
-          <div className="grid grid-cols-4 gap-1">
-            <button 
-              onClick={() => setBackgroundColor('#ffffff')} 
-              className={`p-2 text-xs border rounded hover:bg-gray-50 ${
-                backgroundColor === '#ffffff' ? 'ring-2 ring-blue-500' : ''
-              }`}
-              style={{ backgroundColor: '#ffffff' }}
-            >
-              Vit
-            </button>
-            <button 
-              onClick={() => setBackgroundColor('#f8f9fa')} 
-              className={`p-2 text-xs border rounded hover:bg-gray-200 ${
-                backgroundColor === '#f8f9fa' ? 'ring-2 ring-blue-500' : ''
-              }`}
-              style={{ backgroundColor: '#f8f9fa' }}
-            >
-              Grå
-            </button>
-            <button 
-              onClick={() => setBackgroundColor('#f5f5dc')} 
-              className={`p-2 text-xs border rounded hover:bg-gray-50 ${
-                backgroundColor === '#f5f5dc' ? 'ring-2 ring-blue-500' : ''
-              }`}
-              style={{ backgroundColor: '#f5f5dc' }}
-            >
-              Beige
-            </button>
-            <button 
-              onClick={() => setShowAdvanced(!showAdvanced)}
-              className={`p-2 text-xs border rounded hover:bg-gray-50 ${
-                showAdvanced ? 'ring-2 ring-blue-500 bg-blue-50' : ''
-              }`}
-            >
-              Egen
-            </button>
+        {/* Bakgrundskontroller - bara när text är på */}
+        {showText && (
+          <div>
+            <label className="block text-xs font-medium text-gray-700 mb-1">Bakgrund</label>
+            <div className="grid grid-cols-4 gap-1">
+              <button 
+                onClick={() => setBackgroundColor('#ffffff')} 
+                className={`p-2 text-xs border rounded hover:bg-gray-50 ${
+                  backgroundColor === '#ffffff' ? 'ring-2 ring-blue-500' : ''
+                }`}
+                style={{ backgroundColor: '#ffffff' }}
+              >
+                Vit
+              </button>
+              <button 
+                onClick={() => setBackgroundColor('#f8f9fa')} 
+                className={`p-2 text-xs border rounded hover:bg-gray-200 ${
+                  backgroundColor === '#f8f9fa' ? 'ring-2 ring-blue-500' : ''
+                }`}
+                style={{ backgroundColor: '#f8f9fa' }}
+              >
+                Grå
+              </button>
+              <button 
+                onClick={() => setBackgroundColor('#f5f5dc')} 
+                className={`p-2 text-xs border rounded hover:bg-gray-50 ${
+                  backgroundColor === '#f5f5dc' ? 'ring-2 ring-blue-500' : ''
+                }`}
+                style={{ backgroundColor: '#f5f5dc' }}
+              >
+                Beige
+              </button>
+              <button 
+                onClick={() => setShowAdvanced(!showAdvanced)}
+                className={`p-2 text-xs border rounded hover:bg-gray-50 ${
+                  showAdvanced ? 'ring-2 ring-blue-500 bg-blue-50' : ''
+                }`}
+              >
+                Egen
+              </button>
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
-      {/* Avancerade kontroller */}
-      {showAdvanced && (
+      {/* Avancerade kontroller - bara när text är på */}
+      {showAdvanced && showText && (
         <div className="space-y-3 pt-2 border-t border-gray-200">
           <div>
             <label className="block text-xs font-medium text-gray-700 mb-1">Anpassad bakgrundsfärg</label>

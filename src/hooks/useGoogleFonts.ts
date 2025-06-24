@@ -52,37 +52,59 @@ export function useGoogleFonts(selectedFont: string, memorialFont: string, setSe
       const checkFonts = () => {
         attempts++;
         
-        // Testa om Great Vibes är tillgänglig genom att mäta text-bredd
+        // Testa om BÅDA default-fonterna är tillgängliga
         const testElement = document.createElement('span');
-        testElement.style.fontFamily = '"Great Vibes", cursive';
         testElement.style.fontSize = '72px';
         testElement.style.position = 'absolute';
         testElement.style.visibility = 'hidden';
         testElement.style.whiteSpace = 'nowrap';
-        testElement.textContent = 'Testing Font';
+        testElement.textContent = 'Testing Font Width';
         document.body.appendChild(testElement);
         
-        const greatVibesWidth = testElement.offsetWidth;
+        // Testa Alex Brush (default namn-font)
+        testElement.style.fontFamily = '"Alex Brush", cursive';
+        const alexBrushWidth = testElement.offsetWidth;
         
-        // Testa med fallback font
         testElement.style.fontFamily = 'cursive';
-        const fallbackWidth = testElement.offsetWidth;
+        const cursiveFallbackWidth = testElement.offsetWidth;
+        
+        // Testa Merriweather (default memorial-font)
+        testElement.style.fontFamily = '"Merriweather", serif';
+        const merriweatherWidth = testElement.offsetWidth;
+        
+        testElement.style.fontFamily = 'serif';
+        const serifFallbackWidth = testElement.offsetWidth;
         
         document.body.removeChild(testElement);
         
-        // Om bredden är olika, så är Great Vibes laddad
-        const isLoaded = Math.abs(greatVibesWidth - fallbackWidth) > 5;
+        // Båda default-fonterna måste vara laddade
+        const alexBrushLoaded = Math.abs(alexBrushWidth - cursiveFallbackWidth) > 5;
+        const merriweatherLoaded = Math.abs(merriweatherWidth - serifFallbackWidth) > 5;
+        const isLoaded = alexBrushLoaded && merriweatherLoaded;
         
-        console.log(`Font check attempt ${attempts}: Great Vibes ${isLoaded ? 'LOADED' : 'loading...'} (${greatVibesWidth}px vs ${fallbackWidth}px)`);
+        console.log(`Font check attempt ${attempts}:`, {
+          alexBrush: alexBrushLoaded ? 'LOADED' : 'loading...',
+          merriweather: merriweatherLoaded ? 'LOADED' : 'loading...',
+          overall: isLoaded ? 'READY' : 'waiting...'
+        });
         
         if (isLoaded || attempts >= maxAttempts) {
           console.log('✅ Fonts ready! Setting fontsLoaded = true');
           setFontsLoaded(true);
           
-          // Force en canvas update
+          // Force canvas re-render på ett mer robust sätt
           setTimeout(() => {
-            setSelectedFont(selectedFont);
-          }, 100);
+            // Triggra en re-render genom att "nudge" font-states
+            const currentSelected = selectedFont;
+            
+            // Temporärt sätt tomma fonts
+            setSelectedFont('');
+            
+            // Sätt tillbaka efter en kort delay
+            setTimeout(() => {
+              setSelectedFont(currentSelected);
+            }, 50);
+          }, 200);
         } else {
           setTimeout(checkFonts, 1000); // Försök igen om 1 sekund
         }
@@ -95,15 +117,20 @@ export function useGoogleFonts(selectedFont: string, memorialFont: string, setSe
     waitForFonts();
   }, []); // Bara en gång
 
-  // Force re-render när fonts ändras
+  // Force re-render när fonts ändras - förbättrad version
   useEffect(() => {
     if (fontsLoaded) {
-      console.log(`🔄 Font changed: ${selectedFont} / ${memorialFont}`);
-      setTimeout(() => {
-        setSelectedFont(selectedFont);
-      }, 50);
+      console.log(`🔄 Font state change:`, { selectedFont, memorialFont, fontsLoaded });
+      
+      // Vänta lite för att säkerställa att DOM är uppdaterad
+      const timeoutId = setTimeout(() => {
+        console.log(`🎨 Triggering canvas re-render for font: ${selectedFont}`);
+        // Canvas kommer re-rendera automatiskt via useEffect dependencies
+      }, 100);
+      
+      return () => clearTimeout(timeoutId);
     }
-  }, [selectedFont, memorialFont, fontsLoaded, setSelectedFont]);
+  }, [selectedFont, memorialFont, fontsLoaded]);
 
   return fontsLoaded;
 }

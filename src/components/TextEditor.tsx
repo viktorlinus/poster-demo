@@ -1,6 +1,7 @@
 'use client';
 import { useState } from 'react';
 import { getStripe } from '@/lib/stripe';
+import { PosterFormat, getDefaultFormat } from '@/lib/posterFormats';
 
 // Hooks
 import { useCanvasRenderer } from '@/hooks/useCanvasRenderer';
@@ -14,6 +15,7 @@ import ColorControls from './text-editor/ColorControls';
 import LayoutControls from './text-editor/LayoutControls';
 import PricingControls from './text-editor/PricingControls';
 import CanvasPreview from './text-editor/CanvasPreview';
+import FormatSelector from './text-editor/FormatSelector';
 
 interface TextEditorProps {
   backgroundImageUrl: string;
@@ -37,9 +39,13 @@ export default function TextEditor({ backgroundImageUrl, onCancel, style }: Text
   
   // Layout state
   const [imageScale, setImageScale] = useState(0.75);
+  const [imageVerticalPosition, setImageVerticalPosition] = useState(0.3); // Default 30% från toppen
   const [textSpacing, setTextSpacing] = useState(60);
   const [textVerticalPosition, setTextVerticalPosition] = useState(0.3);
   const [backgroundColor, setBackgroundColor] = useState('#ffffff');
+  
+  // Format state
+  const [selectedFormat, setSelectedFormat] = useState<PosterFormat>(getDefaultFormat());
   
   // App state
   const [isCheckingOut, setIsCheckingOut] = useState(false);
@@ -73,7 +79,7 @@ export default function TextEditor({ backgroundImageUrl, onCancel, style }: Text
   // Custom hooks - pass båda fonterna
   const fontsLoaded = useGoogleFonts(selectedFont, memorialFont, setSelectedFont);
   
-  const { canvasRef, canvasWidth, canvasHeight, createCleanCanvas } = useCanvasRenderer({
+  const { canvasRef, createCleanCanvas, canvasKey } = useCanvasRenderer({
     backgroundImageUrl,
     petName,
     memorialText,
@@ -84,11 +90,13 @@ export default function TextEditor({ backgroundImageUrl, onCancel, style }: Text
     textColor,
     memorialColor,
     imageScale,
+    imageVerticalPosition, // Ny parameter
     textSpacing,
     backgroundColor,
     showText,
     textVerticalPosition,
-    fontsLoaded
+    fontsLoaded,
+    posterFormat: selectedFormat // Ny parameter
   });
 
   useImageProtection(canvasRef);
@@ -112,7 +120,9 @@ export default function TextEditor({ backgroundImageUrl, onCancel, style }: Text
           metadata: {
             petName,
             style: style || 'watercolor',
-            hasText: showText
+            hasText: showText,
+            format: selectedFormat.id,
+            dimensions: selectedFormat.dimensions
           }
         })
       });
@@ -151,14 +161,19 @@ export default function TextEditor({ backgroundImageUrl, onCancel, style }: Text
           <div className="lg:col-span-3 order-1">
             <CanvasPreview 
               canvasRef={canvasRef}
-              canvasWidth={canvasWidth}
-              canvasHeight={canvasHeight}
+              canvasKey={canvasKey}
             />
           </div>
 
           {/* Controls - Visas EFTER bilden på mobil */}
           <div className="lg:col-span-2 order-2">
             <div className="bg-white rounded-lg shadow-lg p-4 space-y-6">
+              
+              <FormatSelector 
+                selectedFormat={selectedFormat}
+                onFormatChange={setSelectedFormat}
+                hasText={showText}
+              />
               
               <TextToggle showText={showText} setShowText={setShowText} />
 
@@ -194,6 +209,8 @@ export default function TextEditor({ backgroundImageUrl, onCancel, style }: Text
                   <LayoutControls
                     imageScale={imageScale}
                     setImageScale={setImageScale}
+                    imageVerticalPosition={imageVerticalPosition}
+                    setImageVerticalPosition={setImageVerticalPosition}
                     backgroundColor={backgroundColor}
                     setBackgroundColor={setBackgroundColor}
                     showText={showText}
@@ -201,20 +218,11 @@ export default function TextEditor({ backgroundImageUrl, onCancel, style }: Text
                 </>
               )}
 
-              {!showText && (
-                <LayoutControls
-                  imageScale={imageScale}
-                  setImageScale={setImageScale}
-                  backgroundColor={backgroundColor}
-                  setBackgroundColor={setBackgroundColor}
-                  showText={showText}
-                />
-              )}
-
               <PricingControls
                 isCheckingOut={isCheckingOut}
                 onCheckout={handleCheckout}
                 onCancel={onCancel}
+                selectedFormat={selectedFormat}
               />
             </div>
           </div>

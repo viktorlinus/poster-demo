@@ -1,10 +1,19 @@
+import { PosterFormat } from '@/lib/posterFormats';
+
 interface PricingControlsProps {
   isCheckingOut: boolean;
   onCheckout: (tier: 'digital' | 'print') => void;
   onCancel: () => void;
+  selectedFormat: PosterFormat;
 }
 
-export default function PricingControls({ isCheckingOut, onCheckout, onCancel }: PricingControlsProps) {
+export default function PricingControls({ isCheckingOut, onCheckout, onCancel, selectedFormat }: PricingControlsProps) {
+  // Beräkna priser baserat på format
+  const basePriceDigital = 79;
+  const basePricePrint = 299;
+  
+  const digitalPrice = basePriceDigital; // Digital pris är alltid 79kr oavsett storlek
+  const printPrice = basePricePrint + (selectedFormat.priceModifier || 0);
   return (
     <div className="border-t pt-4 space-y-3">
       <h4 className="font-medium text-sm text-gray-900">💳 Köp poster</h4>
@@ -14,9 +23,9 @@ export default function PricingControls({ isCheckingOut, onCheckout, onCancel }:
         <div className="flex justify-between items-center mb-2">
           <div>
             <h5 className="font-medium text-blue-900 text-sm">Digital</h5>
-            <p className="text-xs text-blue-700">Högupplöst fil</p>
+            <p className="text-xs text-blue-700">Högupplöst fil • {selectedFormat.label.split(' ')[0]}</p>
           </div>
-          <div className="text-lg font-bold text-blue-900">79kr</div>
+          <div className="text-lg font-bold text-blue-900">{digitalPrice}kr</div>
         </div>
         <button
           onClick={() => onCheckout('digital')}
@@ -35,9 +44,9 @@ export default function PricingControls({ isCheckingOut, onCheckout, onCancel }:
         <div className="flex justify-between items-center mb-2">
           <div>
             <h5 className="font-medium text-green-900 text-sm">Print + Digital</h5>
-            <p className="text-xs text-green-700">30×45cm + digital fil</p>
+            <p className="text-xs text-green-700">{selectedFormat.dimensions.width}×{selectedFormat.dimensions.height}cm + digital fil</p>
           </div>
-          <div className="text-lg font-bold text-green-900">299kr</div>
+          <div className="text-lg font-bold text-green-900">{printPrice}kr</div>
         </div>
         <button
           onClick={() => onCheckout('print')}
