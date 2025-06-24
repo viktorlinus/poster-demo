@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Heart, Camera, Palette, Home, Star, ArrowRight, Check, Shield, Clock, Truck, ChevronLeft, ChevronRight, Sparkles } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
+import FAQ from '@/components/FAQ';
 
 export default function HomePage() {
   const [currentSlide, setCurrentSlide] = useState(0);
@@ -171,6 +172,7 @@ export default function HomePage() {
               <a href="#how-it-works" className="text-gray-600 hover:text-pink-500 transition-colors">Så fungerar det</a>
               <a href="#styles" className="text-gray-600 hover:text-pink-500 transition-colors">Stilar</a>
               <a href="#pricing" className="text-gray-600 hover:text-pink-500 transition-colors">Priser</a>
+              <a href="#faq" className="text-gray-600 hover:text-pink-500 transition-colors">FAQ</a>
             </nav>
           </div>
         </div>
@@ -475,11 +477,11 @@ export default function HomePage() {
               <div className="text-center">
                 <div className="text-4xl mb-4">🖼️</div>
                 <h3 className="text-2xl font-bold text-gray-900 mb-2">Premium Print</h3>
-                <div className="text-3xl font-bold text-orange-600 mb-4">299kr</div>
+                <div className="text-3xl font-bold text-orange-600 mb-4">Från 299kr</div>
                 <ul className="text-left space-y-3 mb-6">
                   <li className="flex items-center gap-2">
                     <Check className="w-4 h-4 text-green-500" />
-                    <span className="text-gray-700">30x45cm Premium Matt</span>
+                    <span className="text-gray-700">Premium Matt kvalitet</span>
                   </li>
                   <li className="flex items-center gap-2">
                     <Check className="w-4 h-4 text-green-500" />
@@ -504,6 +506,9 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* FAQ Section */}
+      <FAQ />
 
       {/* Final CTA */}
       <section className="px-4 py-16 bg-gradient-to-r from-orange-500 to-pink-500">
@@ -534,9 +539,13 @@ export default function HomePage() {
           <div className="flex justify-center gap-6 text-sm text-gray-400">
             <span>© 2025 PetMemories</span>
             <span>•</span>
-            <span>Integritetspolicy</span>
+            <Link href="/privacy" className="hover:text-gray-300 transition-colors">
+              Integritetspolicy
+            </Link>
             <span>•</span>
-            <span>Villkor</span>
+            <Link href="/villkor" className="hover:text-gray-300 transition-colors">
+              Villkor
+            </Link>
           </div>
         </div>
       </footer>

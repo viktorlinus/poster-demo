@@ -254,7 +254,7 @@ export default function GenerateAIPoster() {
               Ladda upp ditt husdjur
             </h2>
             <p className="text-gray-600 max-w-md mx-auto">
-              Välj ett tydligt foto av ditt husdjur för bästa resultat. AI:n kommer att skapa konstminnningar i vald stil.
+              Välj ett tydligt foto av ditt husdjur för bästa resultat. AI:n kommer att skapa 2 konstnärliga posters i vald stil att välja mellan.
             </p>
           </div>
 
