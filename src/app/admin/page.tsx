@@ -1,5 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 
 interface OrderData {
   sessionId: string;
@@ -88,12 +89,19 @@ export default function AdminDashboard() {
     <div className="max-w-6xl mx-auto p-6">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">🛠️ Admin Dashboard</h1>
-        <button 
-          onClick={() => setDebugMode(!debugMode)}
-          className="px-3 py-1 bg-gray-200 rounded text-sm"
-        >
-          {debugMode ? 'Dölj' : 'Visa'} Debug Info
-        </button>
+        <div className="flex gap-2">
+          <Link href="/admin/dev">
+            <button className="px-3 py-1 bg-blue-500 text-white rounded text-sm hover:bg-blue-600">
+              🧪 Development Tools
+            </button>
+          </Link>
+          <button 
+            onClick={() => setDebugMode(!debugMode)}
+            className="px-3 py-1 bg-gray-200 rounded text-sm"
+          >
+            {debugMode ? 'Dölj' : 'Visa'} Debug Info
+          </button>
+        </div>
       </div>
       
       <div className="bg-blue-50 p-4 rounded-lg mb-6">

@@ -1,391 +1,409 @@
 'use client';
-import { useState } from 'react';
-import { STYLE_CONFIGS, DEFAULT_STYLE, getStyleDisplayName, generateMemoryPrompts } from '@/lib/styles';
-import TextEditor from '@/components/TextEditor';
-import { upscaleImage } from '@/lib/upscale';
+import React from 'react';
+import { Heart, Camera, Palette, Home, Star, ArrowRight, Check, Shield, Clock, Truck } from 'lucide-react';
+import Link from 'next/link';
 
-interface PreviewResult {
-  url: string;
-  promptName: string;
-  error?: string;
-  quality?: string;
-  upscaled?: boolean;
-}
+export default function HomePage() {
+  const styles = [
+    { name: 'Akvarell', desc: 'Mjuk & tidlös', emoji: '🎨', example: 'Vattenfärger flyter samman i mjuka toner' },
+    { name: 'Blyerts', desc: 'Klassisk elegans', emoji: '✏️', example: 'Detaljerade skuggningar och linjer' },
+    { name: 'Oljemålning', desc: 'Rik & djup', emoji: '🖼️', example: 'Texturrik och livfull målning' },
+    { name: 'Kolritning', desc: 'Dramatisk kraft', emoji: '⚫', example: 'Starka kontraster och uttryck' },
+    { name: 'Pastell', desc: 'Varm atmosfär', emoji: '🌈', example: 'Mjuka pastellfärger och ljus' },
+    { name: 'Cartoon', desc: 'Lekfull & vibrant', emoji: '🎭', example: 'Färgglad illustration-stil' }
+  ];
 
-export default function Home() {
-  const [previewResults, setPreviewResults] = useState<PreviewResult[]>();
-  const [file, setFile] = useState<File>();
-  const [loading, setLoading] = useState(false);
-  const [style, setStyle] = useState(DEFAULT_STYLE);
-  const [useVisionGenerate, setUseVisionGenerate] = useState(false);
-  const [quality, setQuality] = useState<'low' | 'medium' | 'high'>('low');
-  const [upscaling, setUpscaling] = useState<{[key: number]: boolean}>({});
-  const [showTextEditor, setShowTextEditor] = useState(false);
-  const [selectedImage, setSelectedImage] = useState<string>();
-
-  // Upscale funktion
-  const handleUpscale = async (index: number, imageUrl: string) => {
-    setUpscaling(prev => ({ ...prev, [index]: true }));
-    
-    try {
-      const upscaledUrl = await upscaleImage(imageUrl);
-      
-      // Uppdatera resultatet med upscaled version
-      setPreviewResults(prev => 
-        prev?.map((result, i) => 
-          i === index 
-            ? { ...result, url: upscaledUrl, upscaled: true }
-            : result
-        )
-      );
-      
-      alert('Bild uppskalad! 4x högre upplösning ✨');
-    } catch (error) {
-      console.error('Upscaling error:', error);
-      alert('Uppskalning misslyckades. Försök igen.');
-    } finally {
-      setUpscaling(prev => ({ ...prev, [index]: false }));
+  const testimonials = [
+    {
+      name: "Maria, Stockholm",
+      text: "Bella&apos;s akvarellporträtt hänger nu i vårt vardagsrum. Tårarna kom direkt - det fångade hennes själ perfekt.",
+      pet: "Bella (Golden Retriever)",
+      stars: 5
+    },
+    {
+      name: "Erik, Göteborg", 
+      text: "När Milo gick bort ville vi ha något vackert att minnas honom med. Denna poster blev så mycket mer än ett foto.",
+      pet: "Milo (Katt)",
+      stars: 5
+    },
+    {
+      name: "Anna, Malmö",
+      text: "Fantastisk kvalitet! Levererades snabbt och ser precis ut som vår Charlie. Kommer definitivt beställa fler.",
+      pet: "Charlie (Fransk bulldogg)",
+      stars: 5
     }
-  };
+  ];
 
-  // INGEN localStorage - bara håll i minnet under sessionen
-  const clearResults = () => {
-    setPreviewResults(undefined);
-    setShowTextEditor(false);
-    setSelectedImage(undefined);
-  };
-
-  // TEST-funktion: använd en dummy-bild för att testa text-editorn
-  const testTextEditor = () => {
-    const dummyImage = 'data:image/svg+xml;base64,' + btoa(`
-      <svg width="1024" height="1536" xmlns="http://www.w3.org/2000/svg">
-        <rect width="100%" height="100%" fill="#f0f8ff"/>
-        <circle cx="512" cy="400" r="150" fill="#8b4513"/>
-        <circle cx="450" cy="350" r="20" fill="#000"/>
-        <circle cx="574" cy="350" r="20" fill="#000"/>
-        <ellipse cx="512" cy="420" rx="30" ry="20" fill="#000"/>
-        <text x="512" y="1400" text-anchor="middle" font-size="48" fill="#666">TEST HUSDJUR - för text-editor</text>
-      </svg>
-    `);
-    
-    setSelectedImage(dummyImage);
-    setShowTextEditor(true);
-  };
-
-  // Direkt till text-editor med egen uppladdad bild
-  const testWithOwnImage = () => {
-    if (!file) {
-      alert('Ladda upp en bild först!');
-      return;
+  const processSteps = [
+    {
+      step: "1",
+      icon: <Camera className="w-8 h-8 text-blue-600" />,
+      title: "Ladda upp foto",
+      desc: "Välj ditt favoritfoto av ditt husdjur"
+    },
+    {
+      step: "2", 
+      icon: <Palette className="w-8 h-8 text-purple-600" />,
+      title: "AI skapar konst",
+      desc: "Välj stil och låt AI förvandla bilden"
+    },
+    {
+      step: "3",
+      icon: <Home className="w-8 h-8 text-green-600" />,
+      title: "Levereras hem",
+      desc: "Digital fil direkt eller tryck levererat"
     }
-    
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const imageUrl = e.target?.result as string;
-      setSelectedImage(imageUrl);
-      setShowTextEditor(true);
-    };
-    reader.readAsDataURL(file);
-  };
-
-  // Alla stilar kör nu optimerade 2 prompts
-  const getMemoryPrompts = () => {
-    return generateMemoryPrompts(style); // Optimerade 2 prompts för alla stilar
-  };
-
-
-
-  const handleClick = async () => {
-    if (!file) {
-      return;
-    }
-    
-    setLoading(true);
-    setPreviewResults(undefined);
-    
-    // Generera alla 4 memory prompts
-    const memoryPrompts = getMemoryPrompts();
-    
-    try {
-      // Skicka 4 parallella requests
-      const promises = memoryPrompts.map(async (promptData) => {
-        const formData = new FormData();
-        formData.append('file', file);
-        formData.append('style', style);
-        formData.append('customPrompt', promptData.prompt);
-        formData.append('useVisionGenerate', useVisionGenerate.toString());
-        formData.append('quality', quality);
-        
-        try {
-          const res = await fetch('/api/preview', { 
-            method: 'POST', 
-            body: formData 
-          });
-          
-          const data = await res.json();
-          
-          if (data.error) {
-            return {
-              url: '',
-              promptName: promptData.name,
-              error: data.error
-            };
-          }
-          
-          return {
-            url: data.url || '',
-            promptName: promptData.name,
-            quality: data.quality
-          };
-        } catch {
-          return {
-            url: '',
-            promptName: promptData.name,
-            error: 'Network error'
-          };
-        }
-      });
-      
-      const results = await Promise.all(promises);
-      setPreviewResults(results);
-      
-    } catch (error) {
-      console.error('Error:', error);
-      alert('Något gick fel, försök igen');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Visa text editor om vi har valt en bild
-  if (showTextEditor && selectedImage) {
-    return (
-      <TextEditor
-        backgroundImageUrl={selectedImage}
-        style={style}
-        onCancel={() => setShowTextEditor(false)}
-      />
-    );
-  }
+  ];
 
   return (
-    <main className="max-w-4xl mx-auto mt-16 p-6">
-      <h1 className="text-3xl font-bold mb-8 text-center">Pet Memories - AI Poster MVP</h1>
-      
-      {/* UTVECKLINGS-KNAPP för att testa text-editorn */}
-      <div className="mb-6 p-4 bg-yellow-100 border border-yellow-400 rounded-lg">
-        <h3 className="font-bold text-yellow-800 mb-2">🛠️ UTVECKLING: Testa text-editorn</h3>
-        <div className="space-y-2">
-          <button 
-            onClick={testWithOwnImage}
-            disabled={!file}
-            className="w-full bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            📷 Använd min uppladdade bild i text-editorn
-          </button>
-          <button 
-            onClick={testTextEditor}
-            className="w-full bg-yellow-500 text-white py-2 px-4 rounded hover:bg-yellow-600 font-medium"
-          >
-            🎨 Eller använd dummy-bild
-          </button>
-        </div>
-        <p className="text-sm text-yellow-700 mt-2">Hoppa direkt till text-editorn utan AI-generering</p>
-      </div>
-      
-      {previewResults && (
-        <button 
-          onClick={clearResults}
-          className="mb-4 bg-gray-500 text-white py-1 px-3 rounded text-sm hover:bg-gray-600"
-        >
-          Rensa bilder (försvinner vid siduppdatering)
-        </button>
-      )}
-      
-      <div className="space-y-6">
-        <div>
-          <label className="block text-sm font-medium mb-2">
-            Ladda upp husdjursporträtt
-          </label>
-          <input 
-            type="file" 
-            accept="image/*" 
-            onChange={e => setFile(e.target.files?.[0])}
-            className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-          />
-        </div>
-        
-        <div>
-          <label className="block text-sm font-medium mb-2">
-            Metod
-          </label>
-          <div className="flex gap-4">
-            <label className="flex items-center">
-              <input 
-                type="radio" 
-                name="method" 
-                checked={!useVisionGenerate}
-                onChange={() => setUseVisionGenerate(false)}
-                className="mr-2"
-              />
-              Edit (nuvarande)
-            </label>
-            <label className="flex items-center">
-              <input 
-                type="radio" 
-                name="method" 
-                checked={useVisionGenerate}
-                onChange={() => setUseVisionGenerate(true)}
-                className="mr-2"
-              />
-              Vision + Generate (ny)
-            </label>
+    <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-pink-50">
+      {/* Hero Section */}
+      <section className="px-4 pt-12 pb-16 text-center">
+        <div className="max-w-4xl mx-auto">
+          {/* Badge */}
+          <div className="inline-flex items-center gap-2 bg-white/80 backdrop-blur-sm px-4 py-2 rounded-full border border-orange-200 mb-6">
+            <Heart className="w-4 h-4 text-red-500" />
+            <span className="text-sm font-medium text-gray-700">Över 500 lyckliga husdjursägare</span>
           </div>
-          <p className="text-sm text-gray-600 mt-1">
-            {useVisionGenerate 
-              ? "Använder GPT-4.1-mini för att beskriva husdjuret, sedan genererar ny konstbild"
-              : "Redigerar originalbilden direkt med gpt-image-1"
-            }
-          </p>
-        </div>
-        
-        <div>
-          <label className="block text-sm font-medium mb-2">
-            Bildkvalitet
-          </label>
-          <div className="flex gap-4 mb-4">
-            <label className="flex items-center">
-              <input 
-                type="radio" 
-                name="quality" 
-                value="low"
-                checked={quality === 'low'}
-                onChange={e => setQuality(e.target.value as 'low' | 'medium' | 'high')}
-                className="mr-2"
-              />
-              Low
-            </label>
-            <label className="flex items-center">
-              <input 
-                type="radio" 
-                name="quality" 
-                value="medium"
-                checked={quality === 'medium'}
-                onChange={e => setQuality(e.target.value as 'low' | 'medium' | 'high')}
-                className="mr-2"
-              />
-              Medium
-            </label>
-            <label className="flex items-center">
-              <input 
-                type="radio" 
-                name="quality" 
-                value="high"
-                checked={quality === 'high'}
-                onChange={e => setQuality(e.target.value as 'low' | 'medium' | 'high')}
-                className="mr-2"
-              />
-              High
-            </label>
-          </div>
-        </div>
-        
-        <div>
-          <label className="block text-sm font-medium mb-2">
-            Välj konststil
-          </label>
-          <select 
-            value={style}
-            onChange={e => setStyle(e.target.value)}
-            className="block w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-          >
-            {Object.entries(STYLE_CONFIGS).map(([key, config]) => (
-              <option key={key} value={key}>
-                {config.displayName}
-              </option>
-            ))}
-          </select>
-        </div>
-        
-        <button 
-          onClick={handleClick}
-          disabled={!file || loading}
-          className="w-full bg-blue-500 text-white py-3 px-6 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-blue-600 font-semibold"
-        >
-          {loading 
-            ? `Genererar 2 ${getStyleDisplayName(style)}-varianter (${quality} quality)...` 
-            : `Generera 2 optimerade varianter (${quality} quality)`
-          }
-        </button>
-      </div>
 
-      {previewResults && (
-        <div className="mt-8">
-          <h2 className="text-lg font-semibold mb-4">Dina AI-genererade husdjursposters:</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {previewResults.map((result, index) => (
-              <div key={index} className="border-2 border-gray-300 rounded-lg p-4">
-                <h3 className="font-medium mb-2">
-                  {result.promptName}
-                  <div className="flex gap-2 mt-1">
-                    {result.quality && (
-                      <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
-                        {result.quality} quality
-                      </span>
-                    )}
-                    {result.upscaled && (
-                      <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">
-                        4x upscaled
-                      </span>
-                    )}
+          {/* Main Headline */}
+          <h1 className="text-4xl md:text-6xl font-bold text-gray-900 mb-6 leading-tight">
+            Förvandla ditt älskade husdjur till 
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-pink-500"> evig konst</span>
+          </h1>
+
+          {/* Subheadline */}
+          <p className="text-lg md:text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
+            Vackra AI-skapade posters som hedrar ditt husdjurs minne. Från vanligt foto till konstminnning på 5 minuter.
+          </p>
+
+          {/* CTA Buttons */}
+          <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
+            <Link href="/generera">
+              <button className="w-full sm:w-auto bg-gradient-to-r from-orange-500 to-pink-500 text-white px-8 py-4 rounded-lg font-semibold text-lg shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 flex items-center justify-center gap-2">
+                Skapa min poster nu
+                <ArrowRight className="w-5 h-5" />
+              </button>
+            </Link>
+            <button 
+              onClick={() => document.getElementById('examples')?.scrollIntoView({ behavior: 'smooth' })}
+              className="w-full sm:w-auto border-2 border-gray-300 text-gray-700 px-8 py-4 rounded-lg font-semibold text-lg hover:border-gray-400 transition-colors"
+            >
+              Se exempel
+            </button>
+          </div>
+
+          {/* Trust Indicators */}
+          <div className="flex flex-wrap justify-center gap-6 text-sm text-gray-500">
+            <div className="flex items-center gap-2">
+              <Shield className="w-4 h-4 text-green-500" />
+              <span>Säker betalning</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Clock className="w-4 h-4 text-blue-500" />
+              <span>5 minuters process</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Truck className="w-4 h-4 text-purple-500" />
+              <span>Snabb leverans</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Examples Section */}
+      <section id="examples" className="px-4 py-16">
+        <div className="max-w-6xl mx-auto">
+          <h2 className="text-3xl md:text-4xl font-bold text-center text-gray-900 mb-4">
+            Se vad AI kan skapa av ditt husdjur
+          </h2>
+          <p className="text-lg text-gray-600 text-center mb-12 max-w-2xl mx-auto">
+            Riktiga exempel från våra kunder. Från vanligt foto till konstminnning på några minuter.
+          </p>
+          
+          <div className="grid md:grid-cols-3 gap-8">
+            {/* Example 1 - Akvarell */}
+            <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+              <div className="aspect-[3/4] bg-gradient-to-br from-blue-50 to-purple-50 relative">
+                <div className="absolute inset-4 bg-white rounded-lg shadow-inner flex items-center justify-center">
+                  <div className="text-center text-gray-500">
+                    <div className="text-4xl mb-2">🎨</div>
+                    <div className="text-sm font-medium">Akvarell-stil</div>
+                    <div className="text-xs mt-1">Golden Retriever</div>
                   </div>
-                </h3>
-                {result.error ? (
-                  <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
-                    <p className="text-sm">Fel: {result.error}</p>
+                </div>
+                <div className="absolute top-2 right-2 bg-orange-500 text-white px-2 py-1 rounded-full text-xs font-semibold">
+                  Populärast
+                </div>
+              </div>
+              <div className="p-4">
+                <h3 className="font-bold text-gray-900 mb-1">&quot;Bella&apos;s Minne&quot;</h3>
+                <p className="text-sm text-gray-600 mb-3">&quot;Perfekt för vårt vardagsrum. Tårarna kom direkt.&quot;</p>
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-gray-500">Maria, Stockholm</span>
+                  <div className="flex gap-1">
+                    {[...Array(5)].map((_, i) => (
+                      <Star key={i} className="w-3 h-3 fill-yellow-400 text-yellow-400" />
+                    ))}
                   </div>
-                ) : result.url ? (
-                  <>
-                    <img 
-                      src={result.url} 
-                      alt={`AI Generated Poster - ${result.promptName}`}
-                      className="w-full rounded-lg shadow-md mb-3"
-                    />
-                    <div className="space-y-2">
-                      <button
-                        onClick={() => {
-                          setSelectedImage(result.url);
-                          setShowTextEditor(true);
-                        }}
-                        className="w-full bg-green-500 text-white py-2 px-4 rounded hover:bg-green-600 font-medium"
-                      >
-                        Lägg till text & personalisera
-                      </button>
-                      
-                      {!result.upscaled && (
-                        <button
-                          onClick={() => handleUpscale(index, result.url)}
-                          disabled={upscaling[index]}
-                          className="w-full bg-purple-500 text-white py-2 px-4 rounded hover:bg-purple-600 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                          {upscaling[index] ? 'Uppskalerar... (30-60s)' : '🚀 Upskala till 4x kvalitet'}
-                        </button>
-                      )}
-                    </div>
-                  </>
-                ) : (
-                  <div className="bg-gray-100 h-64 rounded-lg flex items-center justify-center">
-                    <p className="text-gray-500">Ingen bild genererad</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Example 2 - Blyerts */}
+            <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+              <div className="aspect-[3/4] bg-gradient-to-br from-gray-50 to-gray-100 relative">
+                <div className="absolute inset-4 bg-white rounded-lg shadow-inner flex items-center justify-center">
+                  <div className="text-center text-gray-500">
+                    <div className="text-4xl mb-2">✏️</div>
+                    <div className="text-sm font-medium">Blyerts-stil</div>
+                    <div className="text-xs mt-1">Katt (Memorial)</div>
                   </div>
-                )}
+                </div>
+                <div className="absolute top-2 right-2 bg-purple-500 text-white px-2 py-1 rounded-full text-xs font-semibold">
+                  Memorial
+                </div>
+              </div>
+              <div className="p-4">
+                <h3 className="font-bold text-gray-900 mb-1">&quot;Milo Forever&quot;</h3>
+                <p className="text-sm text-gray-600 mb-3">&quot;En vacker hyllning till vår älskade katt.&quot;</p>
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-gray-500">Erik, Göteborg</span>
+                  <div className="flex gap-1">
+                    {[...Array(5)].map((_, i) => (
+                      <Star key={i} className="w-3 h-3 fill-yellow-400 text-yellow-400" />
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Example 3 - Cartoon */}
+            <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+              <div className="aspect-[3/4] bg-gradient-to-br from-pink-50 to-orange-50 relative">
+                <div className="absolute inset-4 bg-white rounded-lg shadow-inner flex items-center justify-center">
+                  <div className="text-center text-gray-500">
+                    <div className="text-4xl mb-2">🎭</div>
+                    <div className="text-sm font-medium">Cartoon-stil</div>
+                    <div className="text-xs mt-1">Fransk Bulldogg</div>
+                  </div>
+                </div>
+                <div className="absolute top-2 right-2 bg-green-500 text-white px-2 py-1 rounded-full text-xs font-semibold">
+                  Rolig
+                </div>
+              </div>
+              <div className="p-4">
+                <h3 className="font-bold text-gray-900 mb-1">&quot;Charlie Superhjälte&quot;</h3>
+                <p className="text-sm text-gray-600 mb-3">&quot;Barnen älskar sin tecknade Charlie!&quot;</p>
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-gray-500">Anna, Malmö</span>
+                  <div className="flex gap-1">
+                    {[...Array(5)].map((_, i) => (
+                      <Star key={i} className="w-3 h-3 fill-yellow-400 text-yellow-400" />
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="text-center mt-12">
+            <Link href="/generera">
+              <button className="bg-gradient-to-r from-orange-500 to-pink-500 text-white px-8 py-4 rounded-lg font-semibold text-lg shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 flex items-center justify-center gap-2 mx-auto">
+                Skapa din egen poster
+                <ArrowRight className="w-5 h-5" />
+              </button>
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* How It Works */}
+      <section className="px-4 py-16 bg-white/50">
+        <div className="max-w-4xl mx-auto">
+          <h2 className="text-3xl md:text-4xl font-bold text-center text-gray-900 mb-12">
+            Så enkelt fungerar det
+          </h2>
+          
+          <div className="grid md:grid-cols-3 gap-8">
+            {processSteps.map((step, index) => (
+              <div key={index} className="text-center">
+                <div className="w-16 h-16 mx-auto mb-4 bg-white rounded-full shadow-lg flex items-center justify-center">
+                  {step.icon}
+                </div>
+                <div className="w-8 h-8 mx-auto mb-4 bg-gradient-to-r from-orange-500 to-pink-500 text-white rounded-full flex items-center justify-center font-bold">
+                  {step.step}
+                </div>
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">{step.title}</h3>
+                <p className="text-gray-600">{step.desc}</p>
               </div>
             ))}
           </div>
-          <p className="text-sm text-gray-600 mt-4 text-center">
-            Detta är {quality}-kvalitets förhandsvisningar i {getStyleDisplayName(style)}-stil. Jämför resultaten för att se vilken prompt som bevarar likheten bäst!
-          </p>
         </div>
-      )}
-    </main>
+      </section>
+
+      {/* Style Gallery */}
+      <section className="px-4 py-16">
+        <div className="max-w-6xl mx-auto">
+          <h2 className="text-3xl md:text-4xl font-bold text-center text-gray-900 mb-4">
+            Välj din stil
+          </h2>
+          <p className="text-lg text-gray-600 text-center mb-12 max-w-2xl mx-auto">
+            Varje stil skapar en unik känsla. Från klassisk elegans till modern konst.
+          </p>
+          
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-6">
+            {styles.map((style, index) => (
+              <div key={index} className="bg-white rounded-xl p-4 md:p-6 shadow-lg hover:shadow-xl transition-all duration-200 border border-gray-100">
+                <div className="text-3xl md:text-4xl mb-3">{style.emoji}</div>
+                <h3 className="text-lg md:text-xl font-bold text-gray-900 mb-2">{style.name}</h3>
+                <p className="text-sm md:text-base text-gray-600 mb-3">{style.desc}</p>
+                <p className="text-xs md:text-sm text-gray-500">{style.example}</p>
+                <div className="mt-4 text-orange-600 font-semibold">Från 79kr</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Pricing */}
+      <section className="px-4 py-16 bg-white/50">
+        <div className="max-w-4xl mx-auto">
+          <h2 className="text-3xl md:text-4xl font-bold text-center text-gray-900 mb-12">
+            Transparenta priser
+          </h2>
+          
+          <div className="grid md:grid-cols-2 gap-6 max-w-3xl mx-auto">
+            {/* Digital Package */}
+            <div className="bg-white rounded-xl p-6 md:p-8 shadow-lg border border-gray-200">
+              <div className="text-center">
+                <div className="text-4xl mb-4">💻</div>
+                <h3 className="text-2xl font-bold text-gray-900 mb-2">Digital</h3>
+                <div className="text-3xl font-bold text-orange-600 mb-4">79kr</div>
+                <ul className="text-left space-y-3 mb-6">
+                  <li className="flex items-center gap-2">
+                    <Check className="w-4 h-4 text-green-500" />
+                    <span className="text-gray-700">Högupplöst fil (1024x1536px)</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <Check className="w-4 h-4 text-green-500" />
+                    <span className="text-gray-700">Instant nedladdning</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <Check className="w-4 h-4 text-green-500" />
+                    <span className="text-gray-700">Perfekt för hemutskrift</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <Check className="w-4 h-4 text-green-500" />
+                    <span className="text-gray-700">Livstids åtkomst</span>
+                  </li>
+                </ul>
+                <Link href="/generera">
+                  <button className="w-full bg-orange-500 text-white py-3 rounded-lg font-semibold hover:bg-orange-600 transition-colors">
+                    Välj Digital
+                  </button>
+                </Link>
+              </div>
+            </div>
+
+            {/* Print Package */}
+            <div className="bg-white rounded-xl p-6 md:p-8 shadow-xl border-2 border-orange-200 relative">
+              {/* Popular badge */}
+              <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-orange-500 to-pink-500 text-white px-4 py-1 rounded-full text-sm font-semibold">
+                Populärast
+              </div>
+              
+              <div className="text-center">
+                <div className="text-4xl mb-4">🖼️</div>
+                <h3 className="text-2xl font-bold text-gray-900 mb-2">Premium Print</h3>
+                <div className="text-3xl font-bold text-orange-600 mb-4">299kr</div>
+                <ul className="text-left space-y-3 mb-6">
+                  <li className="flex items-center gap-2">
+                    <Check className="w-4 h-4 text-green-500" />
+                    <span className="text-gray-700">30x45cm Premium Matt</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <Check className="w-4 h-4 text-green-500" />
+                    <span className="text-gray-700">Professionellt tryck</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <Check className="w-4 h-4 text-green-500" />
+                    <span className="text-gray-700">Leverans 2-4 dagar</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <Check className="w-4 h-4 text-green-500" />
+                    <span className="text-gray-700">Inkluderar digital fil</span>
+                  </li>
+                </ul>
+                <Link href="/generera">
+                  <button className="w-full bg-gradient-to-r from-orange-500 to-pink-500 text-white py-3 rounded-lg font-semibold hover:shadow-lg transform hover:scale-105 transition-all duration-200">
+                    Välj Premium Print
+                  </button>
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Testimonials */}
+      <section className="px-4 py-16">
+        <div className="max-w-4xl mx-auto">
+          <h2 className="text-3xl md:text-4xl font-bold text-center text-gray-900 mb-12">
+            Vad våra kunder säger
+          </h2>
+          
+          <div className="grid md:grid-cols-3 gap-6">
+            {testimonials.map((testimonial, index) => (
+              <div key={index} className="bg-white rounded-xl p-6 shadow-lg border border-gray-100">
+                <div className="flex gap-1 mb-4">
+                  {[...Array(testimonial.stars)].map((_, i) => (
+                    <Star key={i} className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                  ))}
+                </div>
+                <p className="text-gray-700 mb-4 italic">&ldquo;{testimonial.text}&rdquo;</p>
+                <div className="text-sm">
+                  <div className="font-semibold text-gray-900">{testimonial.name}</div>
+                  <div className="text-gray-500">{testimonial.pet}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Final CTA */}
+      <section className="px-4 py-16 bg-gradient-to-r from-orange-500 to-pink-500">
+        <div className="max-w-4xl mx-auto text-center">
+          <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">
+            Hedra ditt husdjurs minne idag
+          </h2>
+          <p className="text-lg md:text-xl text-white/90 mb-8 max-w-2xl mx-auto">
+            Vissa minnen förtjänar att bevaras för evigt. Skapa en vacker konstminnning som du kommer att älska i många år framöver.
+          </p>
+          <Link href="/generera">
+            <button className="bg-white text-orange-600 px-8 py-4 rounded-lg font-semibold text-lg shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 flex items-center justify-center gap-2 mx-auto">
+              Skapa din poster nu
+              <ArrowRight className="w-5 h-5" />
+            </button>
+          </Link>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="bg-gray-900 text-white px-4 py-12">
+        <div className="max-w-4xl mx-auto text-center">
+          <h3 className="text-2xl font-bold mb-4">Pet Memories</h3>
+          <p className="text-gray-400 mb-6">Förvandla kärlek till konst</p>
+          <div className="flex justify-center gap-6 text-sm text-gray-400">
+            <span>© 2025 Pet Memories</span>
+            <span>•</span>
+            <span>Integritetspolicy</span>
+            <span>•</span>
+            <span>Villkor</span>
+          </div>
+        </div>
+      </footer>
+    </div>
   );
 }

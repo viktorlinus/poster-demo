@@ -1,18 +1,19 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { STYLE_CONFIGS, DEFAULT_STYLE, getStyleDisplayName, generateMemoryPrompts } from '@/lib/styles';
 import TextEditor from '@/components/TextEditor';
-import { 
-  Upload, 
-  Sparkles, 
-  Palette, 
-  Download, 
-  ArrowLeft, 
-  Camera,
-  Eye,
-  EyeOff,
-  Crown,
-  Wand2
+import {
+Upload, 
+Sparkles, 
+Palette, 
+Download, 
+ArrowLeft, 
+Camera,
+Eye,
+EyeOff,
+Crown,
+Wand2,
+  AlertCircle
 } from 'lucide-react';
 
 interface PreviewResult {
@@ -33,6 +34,8 @@ export default function GenerateAIPoster() {
   const [selectedImage, setSelectedImage] = useState<string>();
   const [streamingProgress, setStreamingProgress] = useState<number>(0);
   const [currentGenerating, setCurrentGenerating] = useState<string>('');
+  const [usageInfo, setUsageInfo] = useState<{used: number, remaining: number, total: number} | null>(null);
+  const [rateLimitError, setRateLimitError] = useState<string | null>(null);
 
   // Simulate streaming progress during generation - slower and more realistic
   const simulateStreaming = () => {
@@ -49,12 +52,48 @@ export default function GenerateAIPoster() {
     return interval;
   };
 
+  // Fetch usage info on component mount
+  useEffect(() => {
+    fetchUsageInfo();
+  }, []);
+
+  const fetchUsageInfo = async () => {
+    try {
+      const response = await fetch('/api/usage');
+      const data = await response.json();
+      
+      if (response.ok) {
+        setUsageInfo(data);
+      }
+    } catch (error) {
+      console.error('Failed to fetch usage info:', error);
+    }
+  };
+
   const getMemoryPrompts = () => {
     return generateMemoryPrompts(style);
   };
 
   const handleGenerateClick = async () => {
     if (!file) return;
+    
+    // Reset any previous rate limit errors
+    setRateLimitError(null);
+    
+    // CHECK RATE LIMIT ONCE BEFORE STARTING
+    try {
+      const rateLimitCheck = await fetch('/api/check-rate-limit');
+      const rateLimitData = await rateLimitCheck.json();
+      
+      if (!rateLimitData.allowed) {
+        setRateLimitError(rateLimitData.message || 'För många förfrågningar idag.');
+        await fetchUsageInfo();
+        return;
+      }
+    } catch (error) {
+      console.error('Rate limit check failed:', error);
+      // Continue on error
+    }
     
     setLoading(true);
     setPreviewResults(undefined);
@@ -81,6 +120,7 @@ export default function GenerateAIPoster() {
         formData.append('customPrompt', promptData.prompt);
         formData.append('useVisionGenerate', 'false');
         formData.append('quality', quality);
+        formData.append('skipRateLimit', 'true'); // Skip rate limit in API
         
         try {
           const res = await fetch('/api/preview', { 
@@ -119,6 +159,14 @@ export default function GenerateAIPoster() {
       setCurrentGenerating('Slutför generering...');
       clearInterval(streamInterval);
       setStreamingProgress(100);
+      
+      // INCREMENT USAGE ONCE after successful generation
+      try {
+        await fetch('/api/increment-usage', { method: 'POST' });
+        await fetchUsageInfo();
+      } catch (error) {
+        console.error('Failed to increment usage:', error);
+      }
       
     } catch (error) {
       console.error('Error:', error);
@@ -317,6 +365,34 @@ export default function GenerateAIPoster() {
 
           {/* Generate Button */}
           <div className="text-center mt-8">
+            {/* Usage Info */}
+            {usageInfo && (
+              <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                <p className="text-sm text-blue-800 flex items-center justify-center gap-2">
+                  <Eye className="w-4 h-4" />
+                  Du har <strong>{usageInfo.remaining}</strong> av <strong>{usageInfo.total}</strong> AI-genereringar kvar idag
+                </p>
+              </div>
+            )}
+            
+            {/* Rate Limit Error */}
+            {rateLimitError && (
+              <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+                <div className="flex items-start gap-3">
+                  <AlertCircle className="w-5 h-5 text-red-500 mt-0.5" />
+                  <div className="flex-1 text-left">
+                    <h3 className="font-semibold text-red-800 mb-1">Dagsgräns nådd</h3>
+                    <p className="text-sm text-red-700 mb-3">{rateLimitError}</p>
+                    <button 
+                      onClick={() => setRateLimitError(null)}
+                      className="border border-red-300 text-red-700 px-4 py-2 rounded-lg text-sm hover:bg-red-50 transition-colors"
+                    >
+                      Stäng meddelande
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
             <button 
               onClick={handleGenerateClick}
               disabled={!file || loading}

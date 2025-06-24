@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { OpenAI } from 'openai';
 import { toFile } from 'openai/uploads';
 import { generateStylePrompt, DEFAULT_STYLE, isValidStyle } from '@/lib/styles';
+import { checkAndIncrementUsage, getClientIP } from '@/lib/rate-limit';
 
 // Cache för att undvika att beskriva samma bild flera gånger
 const imageDescriptionCache: { [key: string]: string } = {};
@@ -14,6 +15,30 @@ function getImageCacheKey(file: File): string {
 export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData();
+    const skipRateLimit = formData.get('skipRateLimit') === 'true';
+    
+    // Only check rate limit if not skipped
+    if (!skipRateLimit) {
+      const clientIP = getClientIP(request);
+      const rateLimitResult = await checkAndIncrementUsage(clientIP);
+      
+      if (!rateLimitResult.allowed) {
+        return NextResponse.json({
+          error: 'Rate limit exceeded',
+          message: `Du har använt dina 3 AI-genereringar för idag. Kom tillbaka imorgon så har du 3 nya! 🌅`,
+          remaining: rateLimitResult.remaining,
+          resetTime: rateLimitResult.resetTime
+        }, { 
+          status: 429,
+          headers: {
+            'X-RateLimit-Limit': rateLimitResult.total.toString(),
+            'X-RateLimit-Remaining': rateLimitResult.remaining.toString(),
+            'X-RateLimit-Reset': rateLimitResult.resetTime,
+            'Retry-After': '86400' // 24 hours in seconds
+          }
+        });
+      }
+    }
     const file = formData.get('file') as File | null;
     const rawStyle = formData.get('style') as string || DEFAULT_STYLE;
     const style = isValidStyle(rawStyle) ? rawStyle : DEFAULT_STYLE;
