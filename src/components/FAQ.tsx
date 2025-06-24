@@ -109,7 +109,7 @@ const FAQ = () => {
             Har du fler frågor?
           </p>
           <a
-            href="mailto:support@petmemories.se"
+            href="mailto:vikorlinus@gmail.com"
             className="inline-flex items-center gap-2 bg-gradient-to-r from-orange-500 to-pink-500 text-white px-6 py-3 rounded-lg font-semibold hover:shadow-lg transform hover:scale-105 transition-all duration-200"
           >
             Kontakta oss
