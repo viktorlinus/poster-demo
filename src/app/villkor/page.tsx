@@ -231,7 +231,7 @@ export default function TermsOfService() {
               <h2 className="text-2xl font-bold text-gray-900 mb-4">10. Ansvarsbegränsning</h2>
               <div className="bg-red-50 p-4 rounded-lg border border-red-200">
                 <p className="text-red-800 mb-3">
-                  <strong>Viktigt:</strong> PetMemories tjänst tillhandahålls "som den är" utan garantier. 
+                  <strong>Viktigt:</strong> PetMemories tjänst tillhandahålls &quot;som den är&quot; utan garantier. 
                   Vi ansvarar inte för:
                 </p>
                 <ul className="text-red-700 space-y-1">
