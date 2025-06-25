@@ -23,7 +23,7 @@ declare global {
         allow_ad_personalization_signals?: boolean;
       }
     ) => void;
-    dataLayer: any[];
+    dataLayer: Record<string, unknown>[];
   }
 }
 
