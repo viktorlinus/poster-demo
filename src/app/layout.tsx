@@ -1,5 +1,9 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import GoogleAnalytics from '@/components/GoogleAnalytics';
+import Analytics from '@/components/Analytics';
+import CookieConsent from '@/components/CookieConsent';
+import { Suspense } from 'react';
 
 export const metadata: Metadata = {
   title: 'PetMemories - Förvandla ditt husdjur till konstposter',
@@ -73,7 +77,12 @@ export default function RootLayout({
   return (
     <html lang="sv">
       <body className="antialiased font-sans">
+        <GoogleAnalytics />
+        <Suspense fallback={null}>
+          <Analytics />
+        </Suspense>
         {children}
+        <CookieConsent />
       </body>
     </html>
   );
