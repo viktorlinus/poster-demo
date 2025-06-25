@@ -82,11 +82,33 @@ function SuccessContent() {
         </p>
 
         {orderDetails && (
-          <div className="bg-white rounded-lg p-4 text-left">
+          <div className="bg-white rounded-lg p-4 text-left mb-4">
             <h3 className="font-bold mb-2">Orderdetaljer:</h3>
             <p><strong>Order ID:</strong> {orderDetails.orderId}</p>
             <p><strong>Typ:</strong> {orderDetails.tier}</p>
             <p><strong>Pris:</strong> {orderDetails.amount / 100} kr</p>
+            {orderDetails.petName && <p><strong>Husdjur:</strong> {orderDetails.petName}</p>}
+            {orderDetails.style && <p><strong>Stil:</strong> {orderDetails.style}</p>}
+          </div>
+        )}
+
+        {/* Digital Download Section */}
+        {orderDetails && (orderDetails.tier === 'digital' || orderDetails.tier === 'print') && (
+          <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
+            <h3 className="font-bold text-green-800 mb-3">💾 Din digitala fil är redo!</h3>
+            <p className="text-green-700 text-sm mb-3">
+              Klicka nedan för att ladda ner din högupplösta AI-poster:
+            </p>
+            <a
+              href={`/api/download/${sessionId}`}
+              download
+              className="block w-full bg-green-600 text-white py-3 px-4 rounded-lg hover:bg-green-700 font-medium text-center transition-colors"
+            >
+              📁 Ladda ner din poster (hög kvalitet)
+            </a>
+            <p className="text-xs text-green-600 mt-2">
+              Tips: Högerklicka → &quot;Spara som&quot; för att välja var filen sparas
+            </p>
           </div>
         )}
 
@@ -94,9 +116,24 @@ function SuccessContent() {
           <div className="bg-blue-50 p-4 rounded-lg">
             <h3 className="font-bold text-blue-800 mb-2">Vad händer nu?</h3>
             <div className="text-blue-700 text-sm space-y-2">
-              <p>📧 <strong>Digital version:</strong> Du får ett email med download-länk inom 24h</p>
-              <p>🖨️ <strong>Print version:</strong> Leverans 2-4 arbetsdagar via Gelato</p>
-              <p>📞 <strong>Support:</strong> Kontakta oss om du har frågor</p>
+              {orderDetails?.tier === 'digital' ? (
+                <>
+                  <p>📁 <strong>Digital fil:</strong> Ladda ner direkt ovan - högupplöst och redo för utskrift</p>
+                  <p>📞 <strong>Support:</strong> Kontakta oss om du har frågor</p>
+                </>
+              ) : orderDetails?.tier === 'print' ? (
+                <>
+                  <p>📁 <strong>Digital fil:</strong> Ladda ner direkt ovan</p>
+                  <p>🖨️ <strong>Print version:</strong> Leverans 2-4 arbetsdagar via Gelato</p>
+                  <p>📞 <strong>Support:</strong> Kontakta oss om du har frågor</p>
+                </>
+              ) : (
+                <>
+                  <p>📧 <strong>Digital version:</strong> Du får ett email med download-länk inom 24h</p>
+                  <p>🖨️ <strong>Print version:</strong> Leverans 2-4 arbetsdagar via Gelato</p>
+                  <p>📞 <strong>Support:</strong> Kontakta oss om du har frågor</p>
+                </>
+              )}
             </div>
           </div>
           
