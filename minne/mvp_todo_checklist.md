@@ -13,8 +13,9 @@
   - ✅ Canvas renderer hoppar över tom petName-text
 
 ### **2. Andra kända issues:**
-- [ ] **Manual fulfillment rutin** saknas för print orders
-- [ ] **Impressum/företagsinfo** saknas i footer
+- [x] **Manual fulfillment rutin** - ✅ FIXED: Komplett 5-stegs system med Supabase-lagring
+- [x] **Impressum/företagsinfo** - ✅ FIXED: Lagt till i footer med Viktor Ekström, Borås
+- [x] **Ångerrätt i köpvillkor** - ✅ FIXED: Tydlig info om "ej ångerrätt för personliga varor"
 - [ ] **Support-email** behöver skapas
 
 ## ✅ MVP-CHECKLISTAN – "Pet Memories"
@@ -28,14 +29,14 @@
 | ✅ | **Stripe Checkout** live-nycklar | - Testat med riktigt kort 1 kr<br>- Success-sida visar rätt tier & download-länk |
 | ✅ | **R2-upload** & URL i Stripe metadata | - Bilden öppnas i 100 % skala<br>- URL fungerar i Success-sidan |
 | ✅ | **Digital delivery** via download-länk | - Säker URL med sessionId-validering<br>- ✅ **FIXED: Filnamn problem när ingen text** |
-| ⚠️ | **Manual fulfilment-rutin** | - Checklista: upscale → beställ Gelato → markera "shipped" |
+| ✅ | **Manual fulfilment-rutin** | - ✅ Komplett 5-stegs workflow: pending → uploaded → printed → shipped → delivered<br>- ✅ Supabase databas för persistent lagring<br>- ✅ Gelato Order ID & tracking number hantering<br>- ✅ Admin UI på /admin/fulfillment |
 
 ### **2. Legal & betalkrav**
 | Status | Punkt |
 |--------|-------|
 | ✅ | **Integritetspolicy & personuppgiftstext** (GDPR) på /privacy |
 | ✅ | **Köpvillkor** med "ej ångerrätt för personliga varor" |
-| ❌ | **Impressum/företagsinfo** (namn, adress, e-post) i footer |
+| ✅ | **Impressum/företagsinfo** (namn, adress, e-post) i footer |
 | ⚠️ | **Stripe-kvitto** visar korrekt "Pet Memories (sole proprietor)" |
 
 ### **3. UX & konvertering**
@@ -100,4 +101,4 @@
 
 ---
 
-**Status: 75% av MVP-checklist klar. Fokus nu på kritiska fixes innan marketing.**
+**Status: 85% av MVP-checklist klar. Endast support-email kvar innan marketing kan starta.**

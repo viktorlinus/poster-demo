@@ -530,13 +530,16 @@ export default function HomePage() {
 
       {/* Footer */}
       <footer className="bg-gray-900 text-white px-4 py-12">
-        <div className="max-w-4xl mx-auto text-center">
-          <div className="flex items-center justify-center gap-2 mb-4">
-            <Heart className="h-6 w-6 text-pink-500" />
-            <h3 className="text-2xl font-bold">PetMemories</h3>
+        <div className="max-w-4xl mx-auto">
+          <div className="text-center mb-8">
+            <div className="flex items-center justify-center gap-2 mb-4">
+              <Heart className="h-6 w-6 text-pink-500" />
+              <h3 className="text-2xl font-bold">PetMemories</h3>
+            </div>
+            <p className="text-gray-400 mb-6">Förvandla kärlek till konst</p>
           </div>
-          <p className="text-gray-400 mb-6">Förvandla kärlek till konst</p>
-          <div className="flex justify-center gap-6 text-sm text-gray-400">
+          
+          <div className="flex justify-center gap-6 text-sm text-gray-400 mb-4">
             <span>© 2025 PetMemories</span>
             <span>•</span>
             <Link href="/privacy" className="hover:text-gray-300 transition-colors">
@@ -546,6 +549,11 @@ export default function HomePage() {
             <Link href="/villkor" className="hover:text-gray-300 transition-colors">
               Villkor
             </Link>
+          </div>
+          
+          {/* Subtil företagsinfo */}
+          <div className="text-center text-xs text-gray-500 border-t border-gray-800 pt-4">
+            <p>PetMemories (hobbyverksamhet) • Viktor Ekström • Borås, Sverige • viktorlinus@gmail.com</p>
           </div>
         </div>
       </footer>

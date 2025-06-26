@@ -170,10 +170,18 @@ export default function TermsOfService() {
               <h2 className="text-2xl font-bold text-gray-900 mb-4">7. Återbetalning och garantier</h2>
               
               <div className="bg-yellow-50 p-4 rounded-lg border border-yellow-200 mb-4">
-                <h4 className="font-semibold text-yellow-800 mb-2">Återbetalningspolicy</h4>
-                <p className="text-yellow-700">
-                  Eftersom du ser preview innan köp erbjuder vi normalt inte återbetalning för digital content. 
-                  Återbetalning sker vid tekniska fel, kvalitetsavvikelser eller skadade fysiska posters.
+                <h4 className="font-semibold text-yellow-800 mb-2">Ångerrätt och återbetalningspolicy</h4>
+                <div className="text-yellow-700 space-y-2">
+                  <p><strong>Viktigt:</strong> Enligt svensk konsumentlagstiftning gäller <strong>EJ ångerrätt</strong> för personligt anpassade varor som skapas specifikt för dig.</p>
+                  <p>Då alla AI-posters är unikt skapade baserat på ditt specifika husdjursfoto och anpassning, klassas dessa som personliga varor.</p>
+                  <p>Du ser förhandsvisning innan köp och godkänner resultatet genom din beställning.</p>
+                </div>
+              </div>
+
+              <div className="bg-red-50 p-4 rounded-lg border border-red-200 mb-4">
+                <h4 className="font-semibold text-red-800 mb-2">Återbetalning vid problem</h4>
+                <p className="text-red-700">
+                  Återbetalning sker endast vid tekniska fel, kvalitetsavvikelser som väsentligt avviker från förhandsvisningen, eller skadade fysiska posters.
                 </p>
               </div>
 
@@ -182,7 +190,7 @@ export default function TermsOfService() {
                 <ul className="text-green-700 space-y-1">
                   <li>• Slutresultat motsvarar preview-kvalitet</li>
                   <li>• Fysiska prints kvalitetskontrolleras</li>
-                  <li>• Omtryck eller återbetalning vid problem</li>
+                  <li>• Omtryck eller återbetalning vid leveransproblem</li>
                   <li>• Reklamation inom 14 dagar</li>
                 </ul>
               </div>

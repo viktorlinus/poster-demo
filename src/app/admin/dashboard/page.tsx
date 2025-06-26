@@ -128,6 +128,11 @@ export default function AdminDashboard() {
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">🛠️ Admin Dashboard</h1>
         <div className="flex gap-2">
+          <Link href="/admin/fulfillment">
+            <button className="px-3 py-1 bg-green-500 text-white rounded text-sm hover:bg-green-600">
+              🖨️ Print Fulfillment
+            </button>
+          </Link>
           <Link href="/admin/dev">
             <button className="px-3 py-1 bg-blue-500 text-white rounded text-sm hover:bg-blue-600">
               🧪 Development Tools
