@@ -77,8 +77,20 @@ export default function GenerateAIPoster() {
   const handleGenerateClick = async () => {
     if (!file) return;
     
+    // Skydda mot översättningsproblem genom att wrappa alla state updates i try-catch
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const safeSetState = (setter: (value: any) => void, value: any, fallback?: () => void) => {
+      try {
+        setter(value);
+      } catch (error: unknown) {
+        console.warn('State update blocked, likely due to translation conflict:', 
+          error instanceof Error ? error.message : 'Unknown error');
+        if (fallback) fallback();
+      }
+    };
+    
     // Reset any previous rate limit errors
-    setRateLimitError(null);
+    safeSetState(setRateLimitError, null);
     
     // CHECK RATE LIMIT ONCE BEFORE STARTING
     try {
@@ -86,7 +98,7 @@ export default function GenerateAIPoster() {
       const rateLimitData = await rateLimitCheck.json();
       
       if (!rateLimitData.allowed) {
-        setRateLimitError(rateLimitData.message || 'För många förfrågningar idag.');
+        safeSetState(setRateLimitError, rateLimitData.message || 'För många förfrågningar idag.');
         await fetchUsageInfo();
         return;
       }
@@ -95,9 +107,9 @@ export default function GenerateAIPoster() {
       // Continue on error
     }
     
-    setLoading(true);
-    setPreviewResults(undefined);
-    setCurrentGenerating('Förbereder AI-generering...');
+    safeSetState(setLoading, true);
+    safeSetState(setPreviewResults, undefined);
+    safeSetState(setCurrentGenerating, 'Förbereder AI-generering...');
     
     // Start streaming simulation
     const streamInterval = simulateStreaming();
@@ -105,14 +117,14 @@ export default function GenerateAIPoster() {
     const memoryPrompts = getMemoryPrompts();
     
     try {
-      setCurrentGenerating('Analyserar husdjurets unika drag...');
+      safeSetState(setCurrentGenerating, 'Analyserar husdjurets unika drag...');
       
       // Add delay between requests to simulate streaming
       const results: PreviewResult[] = [];
       
       for (let i = 0; i < memoryPrompts.length; i++) {
         const promptData = memoryPrompts[i];
-        setCurrentGenerating(`Skapar ${promptData.name.toLowerCase()}...`);
+        safeSetState(setCurrentGenerating, `Skapar ${promptData.name.toLowerCase()}...`);
         
         const formData = new FormData();
         formData.append('file', file);
@@ -139,8 +151,12 @@ export default function GenerateAIPoster() {
           
           results.push(result);
           
-          // Update results progressively (streaming effect)
-          setPreviewResults([...results]);
+          // Update results progressively (streaming effect) - med extra skydd
+          safeSetState(setPreviewResults, [...results], () => {
+            // Fallback: reload sidan om state update misslyckas
+            console.warn('Failed to update preview results, possible translation conflict');
+            window.location.reload();
+          });
           
           // Small delay between generations for streaming effect
           if (i < memoryPrompts.length - 1) {
@@ -156,9 +172,9 @@ export default function GenerateAIPoster() {
         }
       }
       
-      setCurrentGenerating('Slutför generering...');
+      safeSetState(setCurrentGenerating, 'Slutför generering...');
       clearInterval(streamInterval);
-      setStreamingProgress(100);
+      safeSetState(setStreamingProgress, 100);
       
       // INCREMENT USAGE ONCE after successful generation
       try {
@@ -172,9 +188,9 @@ export default function GenerateAIPoster() {
       console.error('Error:', error);
       clearInterval(streamInterval);
     } finally {
-      setLoading(false);
-      setStreamingProgress(0);
-      setCurrentGenerating('');
+      safeSetState(setLoading, false);
+      safeSetState(setStreamingProgress, 0);
+      safeSetState(setCurrentGenerating, '');
     }
   };
 
@@ -363,9 +379,9 @@ export default function GenerateAIPoster() {
             </div>
           </div>
 
-          {/* Generate Button */}
+          {/* Generate Button - SKYDDA denna knapp */}
           <div className="text-center mt-8">
-            {/* Usage Info */}
+            {/* Usage Info - låt översättas */}
             {usageInfo && (
               <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
                 <p className="text-sm text-blue-800 flex items-center justify-center gap-2">
@@ -375,7 +391,7 @@ export default function GenerateAIPoster() {
               </div>
             )}
             
-            {/* Rate Limit Error */}
+            {/* Rate Limit Error - låt översättas */}
             {rateLimitError && (
               <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
                 <div className="flex items-start gap-3">
@@ -393,9 +409,12 @@ export default function GenerateAIPoster() {
                 </div>
               </div>
             )}
+            {/* Skydda knappen från översättning + enkel text */}
             <button 
               onClick={handleGenerateClick}
               disabled={!file || loading}
+              translate="no"
+              data-notranslate="true"
               className="inline-flex items-center gap-3 bg-gradient-to-r from-orange-500 to-pink-500 text-white px-8 py-4 rounded-2xl font-bold text-lg shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
             >
               {loading ? (
@@ -406,14 +425,14 @@ export default function GenerateAIPoster() {
               ) : (
                 <>
                   <Wand2 className="w-6 h-6" />
-                  Skapa AI-poster i {getStyleDisplayName(style)}
+                  Generera poster
                 </>
               )}
             </button>
           </div>
         </div>
 
-        {/* Loading Progress */}
+        {/* Loading Progress - låt text översättas men skydda progress bar */}
         {loading && (
           <div className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-xl p-6 mb-8">
             <div className="text-center">
@@ -423,7 +442,8 @@ export default function GenerateAIPoster() {
               <h3 className="text-xl font-bold text-gray-800 mb-2">
                 {currentGenerating || 'Genererar dina AI-posters...'}
               </h3>
-              <div className="max-w-md mx-auto bg-gray-200 rounded-full h-3 mb-4">
+              {/* Progress bar skyddas eftersom den uppdateras dynamiskt */}
+              <div className="max-w-md mx-auto bg-gray-200 rounded-full h-3 mb-4" translate="no">
                 <div 
                   className="bg-gradient-to-r from-orange-500 to-pink-500 h-3 rounded-full transition-all duration-500"
                   style={{ width: `${streamingProgress}%` }}
@@ -436,7 +456,7 @@ export default function GenerateAIPoster() {
           </div>
         )}
 
-        {/* Results */}
+        {/* Results - låt text översättas men skydda interaktiva element */}
         {previewResults && previewResults.length > 0 && (
           <div className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-xl p-8">
             <div className="text-center mb-8">
@@ -477,6 +497,7 @@ export default function GenerateAIPoster() {
                     </div>
                   ) : result.url ? (
                     <>
+                      {/* Bilden behöver inte skyddas */}
                       <div className="relative bg-gray-100">
                         <ProtectedImage
                           src={result.url}
@@ -486,6 +507,7 @@ export default function GenerateAIPoster() {
                       </div>
                       
                       <div className="p-4 space-y-3">
+                        {/* TESTA denna knapp utan skydd */}
                         <button
                           onClick={() => {
                             setSelectedImage(result.url);

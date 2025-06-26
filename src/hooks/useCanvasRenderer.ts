@@ -70,6 +70,19 @@ export function useCanvasRenderer({
     return fontString;
   };
 
+  // Skydda canvas mot översättning
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (canvas) {
+      // Förhindra översättning av canvas-elementet
+      canvas.setAttribute('translate', 'no');
+      canvas.setAttribute('data-notranslate', 'true');
+      // Extra isolation för att skydda mot DOM-manipulering
+      canvas.style.isolation = 'isolate';
+      console.log('🛡️ Canvas protected from translation');
+    }
+  }, []);
+
   // Ladda bakgrundsbild
   useEffect(() => {
     const img = new Image();

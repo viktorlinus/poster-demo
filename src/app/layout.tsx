@@ -3,6 +3,7 @@ import "./globals.css";
 import GoogleAnalytics from '@/components/GoogleAnalytics';
 import Analytics from '@/components/Analytics';
 import CookieConsent from '@/components/CookieConsent';
+import TranslationErrorBoundary from '@/components/TranslationErrorBoundary';
 import { Suspense } from 'react';
 
 export const metadata: Metadata = {
@@ -76,13 +77,19 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="sv">
+      <head>
+        {/* Behåll meta tags för att hjälpa översättare att förstå språk */}
+      </head>
       <body className="antialiased font-sans">
-        <GoogleAnalytics />
-        <Suspense fallback={null}>
-          <Analytics />
-        </Suspense>
-        {children}
-        <CookieConsent />
+        <TranslationErrorBoundary>
+          {/* TA BORT translate="no" härifrån - låt text översättas */}
+          <GoogleAnalytics />
+          <Suspense fallback={null}>
+            <Analytics />
+          </Suspense>
+          {children}
+          <CookieConsent />
+        </TranslationErrorBoundary>
       </body>
     </html>
   );
