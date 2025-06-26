@@ -12,7 +12,7 @@ export interface RateLimitResult {
   resetTime: string;
 }
 
-export async function checkAndIncrementUsage(ip: string): Promise<RateLimitResult> {
+export async function checkAndIncrementUsage(ip: string, category: string = 'watercolor'): Promise<RateLimitResult> {
   const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
   const maxRequests = 3;
   
@@ -21,7 +21,8 @@ export async function checkAndIncrementUsage(ip: string): Promise<RateLimitResul
     const { data: newCount, error } = await supabase
       .rpc('increment_usage', { 
         _ip: ip, 
-        _date: today 
+        _date: today,
+        _category: category
       });
     
     if (error) {

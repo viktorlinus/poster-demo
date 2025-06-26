@@ -4,7 +4,17 @@ import { checkAndIncrementUsage, getClientIP } from '@/lib/rate-limit';
 export async function POST(request: NextRequest) {
   try {
     const clientIP = getClientIP(request);
-    const result = await checkAndIncrementUsage(clientIP);
+    
+    // Hämta style/kategori från request body
+    let category = 'watercolor'; // default
+    try {
+      const body = await request.json();
+      category = body.category || body.style || 'watercolor';
+    } catch {
+      // Om JSON parsing failar, använd default
+    }
+    
+    const result = await checkAndIncrementUsage(clientIP, category);
     
     return NextResponse.json({
       success: true,

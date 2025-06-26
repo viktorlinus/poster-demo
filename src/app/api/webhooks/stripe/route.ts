@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerStripe } from '@/lib/stripe';
 import { headers } from 'next/headers';
 import { S3Client, CopyObjectCommand, DeleteObjectCommand } from '@aws-sdk/client-s3';
+import { createClient } from '@supabase/supabase-js';
 import Stripe from 'stripe';
 
 const s3Client = new S3Client({
@@ -12,6 +13,11 @@ const s3Client = new S3Client({
     secretAccessKey: process.env.R2_SECRET_ACCESS_KEY!,
   },
 });
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+);
 
 export async function POST(request: NextRequest) {
   const body = await request.text();
@@ -40,6 +46,29 @@ export async function POST(request: NextRequest) {
     const { tier, orderId, tempKey, petName, style } = session.metadata || {};
     
     console.log(`Payment completed for ${tier} tier, order ${orderId}`);
+    
+    // Save order to database (non-blocking)
+    try {
+      const { error } = await supabase.from('stripe_orders').insert({
+        stripe_session_id: session.id,
+        amount_sek: (session.amount_total || 0) / 100, // Stripe uses öre
+        tier: tier || 'unknown',
+        customer_email: session.customer_details?.email,
+        pet_name: petName,
+        style: style,
+        order_id: orderId,
+        status: 'completed'
+      });
+
+      if (error) {
+        console.error('Database insert error (non-blocking):', error);
+      } else {
+        console.log(`Order ${orderId} saved to database`);
+      }
+    } catch (dbError) {
+      console.error('Database error (non-blocking):', dbError);
+      // Continue with normal processing even if DB fails
+    }
     
     try {
       // Move file from temp_orders/ to paid_orders/

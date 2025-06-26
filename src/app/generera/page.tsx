@@ -178,7 +178,11 @@ export default function GenerateAIPoster() {
       
       // INCREMENT USAGE ONCE after successful generation
       try {
-        await fetch('/api/increment-usage', { method: 'POST' });
+        await fetch('/api/increment-usage', { 
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ style: style, category: style })
+        });
         await fetchUsageInfo();
       } catch (error) {
         console.error('Failed to increment usage:', error);
