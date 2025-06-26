@@ -118,9 +118,9 @@ export default function TextEditor({ backgroundImageUrl, onCancel, style }: Text
           tier,
           posterDataUrl,
           metadata: {
-            petName,
+            petName: showText && petName.trim() && petName.trim() !== 'Bella' ? petName.trim() : '',
             style: style || 'watercolor',
-            hasText: showText,
+            hasText: showText && petName.trim().length > 0 && petName.trim() !== 'Bella',
             format: selectedFormat.id,
             dimensions: selectedFormat.dimensions
           }

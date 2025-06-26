@@ -34,8 +34,10 @@ export async function POST(request: NextRequest) {
     // Generate unique order ID
     const orderId = `order_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     
-    // Create descriptive filename
-    const descriptiveFileName = `${metadata?.petName || 'husdjur'}_${metadata?.style || 'watercolor'}_${orderId}.png`;
+    // Create descriptive filename based on whether text was actually used
+    const hasActualText = metadata?.hasText && metadata?.petName && metadata.petName.trim().length > 0;
+    const petNameForFile = hasActualText ? metadata.petName.trim() : 'husdjur';
+    const descriptiveFileName = `${petNameForFile}_${metadata?.style || 'watercolor'}_${orderId}.png`;
     
     // Save poster to R2 as temp file
     const tempKey = `temp_orders/${descriptiveFileName}`;
@@ -52,8 +54,8 @@ export async function POST(request: NextRequest) {
           price_data: {
             currency: 'sek',
             product_data: {
-              name: `${price.name} - ${metadata?.petName || 'Husdjur'} (${metadata?.style || 'watercolor'})`,
-              description: `${price.description} | Order: ${orderId} | Fil: ${metadata?.petName || 'husdjur'}_${metadata?.style || 'watercolor'}_${orderId}.png`,
+              name: `${price.name} - ${hasActualText ? metadata.petName : 'Husdjur'} (${metadata?.style || 'watercolor'})`,
+              description: `${price.description} | Order: ${orderId} | Fil: ${descriptiveFileName}`,
             },
             unit_amount: price.amount,
           },
@@ -68,7 +70,8 @@ export async function POST(request: NextRequest) {
         orderId,
         tempKey,
         fileName: descriptiveFileName,
-        petName: metadata?.petName || 'Okänt husdjur',
+        petName: hasActualText ? metadata.petName : 'Husdjur',
+        hasActualText: hasActualText,
         style: metadata?.style || 'watercolor',
         timestamp: new Date().toISOString(),
       },

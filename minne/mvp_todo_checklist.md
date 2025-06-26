@@ -3,13 +3,14 @@
 
 ## 🚨 KRITISKA ISSUES ATT FIXA
 
-### **1. Metadata-problem i checkout:**
+### **1. ✅ Metadata-problem i checkout: FIXED**
 - **Problem**: Om användare väljer "bara bild" (ingen text) sparas namnet som "bella" fast vi inte vet namnet
-- **Orsak**: Text editor sätter ett default-namn även när inget namn anges
-- **Fix needed**: 
-  - Kontrollera om användare faktiskt lagt till text
-  - Om ingen text: sätt petName som "Pet" eller "Husdjur" eller ta bort helt
-  - Uppdatera både checkout-metadata och download-filnamn
+- **Lösning implementerad**: 
+  - ✅ TextEditor sätter tom sträng som default istället för "Bella"
+  - ✅ Skickar hasActualText-flagga i metadata
+  - ✅ Checkout API kollar hasActualText och använder "husdjur" som fallback
+  - ✅ Download API använder samma logik för filnamn
+  - ✅ Canvas renderer hoppar över tom petName-text
 
 ### **2. Andra kända issues:**
 - [ ] **Manual fulfillment rutin** saknas för print orders
@@ -26,7 +27,7 @@
 | ✅ | **Rate-limit** 3 requests / IP / dygn (+5 efter köp) | - Insert/Update i `daily_usage`-tabell<br>- 429-svar returnerar begripligt felmeddelande |
 | ✅ | **Stripe Checkout** live-nycklar | - Testat med riktigt kort 1 kr<br>- Success-sida visar rätt tier & download-länk |
 | ✅ | **R2-upload** & URL i Stripe metadata | - Bilden öppnas i 100 % skala<br>- URL fungerar i Success-sidan |
-| ✅ | **Digital delivery** via download-länk | - Säker URL med sessionId-validering<br>- **ISSUE: Filnamn problem när ingen text** |
+| ✅ | **Digital delivery** via download-länk | - Säker URL med sessionId-validering<br>- ✅ **FIXED: Filnamn problem när ingen text** |
 | ⚠️ | **Manual fulfilment-rutin** | - Checklista: upscale → beställ Gelato → markera "shipped" |
 
 ### **2. Legal & betalkrav**

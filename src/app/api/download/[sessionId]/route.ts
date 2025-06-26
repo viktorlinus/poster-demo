@@ -113,8 +113,9 @@ export async function GET(
       offset += chunk.length;
     }
 
-    // Get customer info for filename
-    const petName = session.metadata?.petName || 'pet';
+    // Get customer info for filename - use same logic as checkout
+    const hasActualText = session.metadata?.hasActualText === 'true';
+    const petName = hasActualText ? (session.metadata?.petName || 'pet') : 'husdjur';
     const style = session.metadata?.style || 'artwork';
     
     // Create descriptive filename
