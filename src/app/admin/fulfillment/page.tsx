@@ -78,7 +78,7 @@ export default function FulfillmentPage() {
     });
   }, [router]);
 
-  const updateFulfillmentStatus = async (sessionId: string, status: string, additionalData: any = {}) => {
+  const updateFulfillmentStatus = async (sessionId: string, status: string, additionalData: Record<string, any> = {}) => {
     setUpdatingOrder(sessionId);
     try {
       const token = localStorage.getItem('adminAuth');
