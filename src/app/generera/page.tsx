@@ -1,18 +1,19 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { STYLE_CONFIGS, DEFAULT_STYLE, getStyleDisplayName, generateMemoryPrompts } from '@/lib/styles';
+import { saveGeneration, loadGenerations, type Generation } from '@/lib/generationHistory';
 import TextEditor from '@/components/TextEditor';
 import {
-Upload, 
-Sparkles, 
-Palette, 
-Download, 
-ArrowLeft, 
-Camera,
-Eye,
-EyeOff,
-Crown,
-Wand2,
+  Upload, 
+  Sparkles, 
+  Palette, 
+  Download, 
+  ArrowLeft, 
+  Camera,
+  Eye,
+  EyeOff,
+  Crown,
+  Wand2,
   AlertCircle
 } from 'lucide-react';
 
@@ -36,8 +37,10 @@ export default function GenerateAIPoster() {
   const [currentGenerating, setCurrentGenerating] = useState<string>('');
   const [usageInfo, setUsageInfo] = useState<{used: number, remaining: number, total: number} | null>(null);
   const [rateLimitError, setRateLimitError] = useState<string | null>(null);
+  const [generationHistory, setGenerationHistory] = useState<Generation[]>([]);
+  const [isLoadingHistory, setIsLoadingHistory] = useState(true);
 
-  // Simulate streaming progress during generation - slower and more realistic
+  // Simulate streaming progress during generation
   const simulateStreaming = () => {
     setStreamingProgress(0);
     const interval = setInterval(() => {
@@ -46,16 +49,30 @@ export default function GenerateAIPoster() {
           clearInterval(interval);
           return 90;
         }
-        return prev + Math.random() * 5; // Slower progress
+        return prev + Math.random() * 5;
       });
-    }, 800); // Longer intervals
+    }, 800);
     return interval;
   };
 
-  // Fetch usage info on component mount
+  // Load history from IndexedDB on component mount
   useEffect(() => {
     fetchUsageInfo();
+    loadHistoryFromDB();
   }, []);
+  
+  const loadHistoryFromDB = async () => {
+    setIsLoadingHistory(true);
+    try {
+      const history = await loadGenerations();
+      setGenerationHistory(history);
+      console.log('💾 Loaded', history.length, 'generations from IndexedDB');
+    } catch (error) {
+      console.error('Failed to load history:', error);
+    } finally {
+      setIsLoadingHistory(false);
+    }
+  };
 
   const fetchUsageInfo = async () => {
     try {
@@ -77,20 +94,8 @@ export default function GenerateAIPoster() {
   const handleGenerateClick = async () => {
     if (!file) return;
     
-    // Skydda mot översättningsproblem genom att wrappa alla state updates i try-catch
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const safeSetState = (setter: (value: any) => void, value: any, fallback?: () => void) => {
-      try {
-        setter(value);
-      } catch (error: unknown) {
-        console.warn('State update blocked, likely due to translation conflict:', 
-          error instanceof Error ? error.message : 'Unknown error');
-        if (fallback) fallback();
-      }
-    };
-    
     // Reset any previous rate limit errors
-    safeSetState(setRateLimitError, null);
+    setRateLimitError(null);
     
     // CHECK RATE LIMIT ONCE BEFORE STARTING
     try {
@@ -98,18 +103,17 @@ export default function GenerateAIPoster() {
       const rateLimitData = await rateLimitCheck.json();
       
       if (!rateLimitData.allowed) {
-        safeSetState(setRateLimitError, rateLimitData.message || 'För många förfrågningar idag.');
+        setRateLimitError(rateLimitData.message || 'För många förfrågningar idag.');
         await fetchUsageInfo();
         return;
       }
     } catch (error) {
       console.error('Rate limit check failed:', error);
-      // Continue on error
     }
     
-    safeSetState(setLoading, true);
-    safeSetState(setPreviewResults, undefined);
-    safeSetState(setCurrentGenerating, 'Förbereder AI-generering...');
+    setLoading(true);
+    setPreviewResults(undefined);
+    setCurrentGenerating('Förbereder AI-generering...');
     
     // Start streaming simulation
     const streamInterval = simulateStreaming();
@@ -117,14 +121,13 @@ export default function GenerateAIPoster() {
     const memoryPrompts = getMemoryPrompts();
     
     try {
-      safeSetState(setCurrentGenerating, 'Analyserar husdjurets unika drag...');
+      setCurrentGenerating('Analyserar husdjurets unika drag...');
       
-      // Add delay between requests to simulate streaming
       const results: PreviewResult[] = [];
       
       for (let i = 0; i < memoryPrompts.length; i++) {
         const promptData = memoryPrompts[i];
-        safeSetState(setCurrentGenerating, `Skapar ${promptData.name.toLowerCase()}...`);
+        setCurrentGenerating(`Skapar ${promptData.name.toLowerCase()}...`);
         
         const formData = new FormData();
         formData.append('file', file);
@@ -132,7 +135,7 @@ export default function GenerateAIPoster() {
         formData.append('customPrompt', promptData.prompt);
         formData.append('useVisionGenerate', 'false');
         formData.append('quality', quality);
-        formData.append('skipRateLimit', 'true'); // Skip rate limit in API
+        formData.append('skipRateLimit', 'true');
         
         try {
           const res = await fetch('/api/preview', { 
@@ -150,13 +153,7 @@ export default function GenerateAIPoster() {
           };
           
           results.push(result);
-          
-          // Update results progressively (streaming effect) - med extra skydd
-          safeSetState(setPreviewResults, [...results], () => {
-            // Fallback: reload sidan om state update misslyckas
-            console.warn('Failed to update preview results, possible translation conflict');
-            window.location.reload();
-          });
+          setPreviewResults([...results]);
           
           // Small delay between generations for streaming effect
           if (i < memoryPrompts.length - 1) {
@@ -172,9 +169,33 @@ export default function GenerateAIPoster() {
         }
       }
       
-      safeSetState(setCurrentGenerating, 'Slutför generering...');
+      setCurrentGenerating('Slutför generering...');
       clearInterval(streamInterval);
-      safeSetState(setStreamingProgress, 100);
+      setStreamingProgress(100);
+      
+      // SPARA I INDEXEDDB (persistent mellan sessions!)
+      const successfulResults = results.filter(r => r.url && !r.error);
+      if (successfulResults.length > 0) {
+        const newGeneration: Generation = {
+          id: Date.now().toString(),
+          timestamp: Date.now(),
+          style: style,
+          quality: quality,
+          results: successfulResults
+        };
+        
+        // Spara till IndexedDB
+        saveGeneration(newGeneration).then(() => {
+          console.log('💾 Saved generation to IndexedDB');
+        }).catch(error => {
+          console.error('❌ Failed to save to IndexedDB:', error);
+        });
+        
+        // Uppdatera state omedelbart för UI
+        const updatedHistory = [newGeneration, ...generationHistory].slice(0, 20);
+        setGenerationHistory(updatedHistory);
+        console.log('🚀 Added generation to session history:', successfulResults.length, 'images');
+      }
       
       // INCREMENT USAGE ONCE after successful generation
       try {
@@ -192,9 +213,9 @@ export default function GenerateAIPoster() {
       console.error('Error:', error);
       clearInterval(streamInterval);
     } finally {
-      safeSetState(setLoading, false);
-      safeSetState(setStreamingProgress, 0);
-      safeSetState(setCurrentGenerating, '');
+      setLoading(false);
+      setStreamingProgress(0);
+      setCurrentGenerating('');
     }
   };
 
@@ -383,9 +404,9 @@ export default function GenerateAIPoster() {
             </div>
           </div>
 
-          {/* Generate Button - SKYDDA denna knapp */}
+          {/* Generate Button */}
           <div className="text-center mt-8">
-            {/* Usage Info - låt översättas */}
+            {/* Usage Info */}
             {usageInfo && (
               <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
                 <p className="text-sm text-blue-800 flex items-center justify-center gap-2">
@@ -395,7 +416,7 @@ export default function GenerateAIPoster() {
               </div>
             )}
             
-            {/* Rate Limit Error - låt översättas */}
+            {/* Rate Limit Error */}
             {rateLimitError && (
               <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
                 <div className="flex items-start gap-3">
@@ -413,12 +434,10 @@ export default function GenerateAIPoster() {
                 </div>
               </div>
             )}
-            {/* Skydda knappen från översättning + enkel text */}
+            
             <button 
               onClick={handleGenerateClick}
               disabled={!file || loading}
-              translate="no"
-              data-notranslate="true"
               className="inline-flex items-center gap-3 bg-gradient-to-r from-orange-500 to-pink-500 text-white px-8 py-4 rounded-2xl font-bold text-lg shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
             >
               {loading ? (
@@ -436,7 +455,7 @@ export default function GenerateAIPoster() {
           </div>
         </div>
 
-        {/* Loading Progress - låt text översättas men skydda progress bar */}
+        {/* Loading Progress */}
         {loading && (
           <div className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-xl p-6 mb-8">
             <div className="text-center">
@@ -446,8 +465,7 @@ export default function GenerateAIPoster() {
               <h3 className="text-xl font-bold text-gray-800 mb-2">
                 {currentGenerating || 'Genererar dina AI-posters...'}
               </h3>
-              {/* Progress bar skyddas eftersom den uppdateras dynamiskt */}
-              <div className="max-w-md mx-auto bg-gray-200 rounded-full h-3 mb-4" translate="no">
+              <div className="max-w-md mx-auto bg-gray-200 rounded-full h-3 mb-4">
                 <div 
                   className="bg-gradient-to-r from-orange-500 to-pink-500 h-3 rounded-full transition-all duration-500"
                   style={{ width: `${streamingProgress}%` }}
@@ -460,9 +478,9 @@ export default function GenerateAIPoster() {
           </div>
         )}
 
-        {/* Results - låt text översättas men skydda interaktiva element */}
+        {/* Results */}
         {previewResults && previewResults.length > 0 && (
-          <div className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-xl p-8">
+          <div className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-xl p-8 mb-8">
             <div className="text-center mb-8">
               <h2 className="text-3xl font-bold text-gray-800 mb-2">
                 Dina AI-genererade poster
@@ -501,7 +519,6 @@ export default function GenerateAIPoster() {
                     </div>
                   ) : result.url ? (
                     <>
-                      {/* Bilden behöver inte skyddas */}
                       <div className="relative bg-gray-100">
                         <ProtectedImage
                           src={result.url}
@@ -511,7 +528,6 @@ export default function GenerateAIPoster() {
                       </div>
                       
                       <div className="p-4 space-y-3">
-                        {/* TESTA denna knapp utan skydd */}
                         <button
                           onClick={() => {
                             setSelectedImage(result.url);
@@ -545,6 +561,114 @@ export default function GenerateAIPoster() {
                 Alla bilder visar preview-vattenmärken. Slutgiltig poster blir ren utan märken efter beställning.
               </p>
             </div>
+          </div>
+        )}
+
+        {/* Previous Generations */}
+        {(generationHistory.length > 0 || isLoadingHistory) && (
+          <div className="bg-white/70 backdrop-blur-sm rounded-2xl shadow-xl p-8">
+            <div className="text-center mb-8">
+              <h2 className="text-3xl font-bold text-gray-800 mb-2">
+                Tidigare generationer
+              </h2>
+              {isLoadingHistory ? (
+                <div className="text-gray-600 flex items-center justify-center gap-2">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-600"></div>
+                  <span>Laddar sparade bilder...</span>
+                </div>
+              ) : (
+                <p className="text-gray-600">
+                  Välj från dina tidigare AI-genererade posters. Totalt {generationHistory.reduce((total, gen) => total + gen.results.length, 0)} bilder sparade permanent.
+                </p>
+              )}
+            </div>
+
+            {isLoadingHistory ? (
+              <div className="grid md:grid-cols-2 gap-8">
+                {[1, 2, 3, 4].map(i => (
+                  <div key={i} className="bg-white rounded-xl shadow-lg overflow-hidden animate-pulse">
+                    <div className="p-4 bg-gray-100">
+                      <div className="h-4 bg-gray-300 rounded w-3/4 mb-2"></div>
+                      <div className="flex gap-2">
+                        <div className="h-6 bg-gray-300 rounded-full w-16"></div>
+                        <div className="h-6 bg-gray-300 rounded-full w-20"></div>
+                      </div>
+                    </div>
+                    <div className="bg-gray-100 aspect-[2/3]"></div>
+                    <div className="p-4">
+                      <div className="h-10 bg-gray-300 rounded"></div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : generationHistory.length > 0 ? (
+              <div className="grid md:grid-cols-2 gap-8">
+                {generationHistory.slice(0, 4).flatMap(generation => 
+                  generation.results.map((result, idx) => (
+                    <div key={`${generation.id}-${idx}`} className="bg-white rounded-xl shadow-lg overflow-hidden">
+                      <div className="p-4 bg-gradient-to-r from-gray-50 to-gray-100">
+                        <h3 className="font-bold text-gray-800 flex items-center gap-2">
+                          <Eye className="w-4 h-4" />
+                          {result.promptName}
+                        </h3>
+                        <div className="flex gap-2 mt-2">
+                          {generation.quality && (
+                            <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
+                              {generation.quality} kvalitet
+                            </span>
+                          )}
+                          <span className="text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded-full">
+                            {getStyleDisplayName(generation.style)}
+                          </span>
+                          <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-full">
+                            {new Date(generation.timestamp).toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' })}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="relative bg-gray-100">
+                        <ProtectedImage
+                          src={result.url}
+                          alt={`AI Generated Poster - ${result.promptName}`}
+                          className="w-full h-auto"
+                        />
+                      </div>
+                      
+                      <div className="p-4 space-y-3">
+                        <button
+                          onClick={() => {
+                            setSelectedImage(result.url);
+                            setShowTextEditor(true);
+                          }}
+                          className="w-full bg-gradient-to-r from-purple-500 to-indigo-500 text-white py-3 px-4 rounded-lg font-semibold hover:shadow-lg transform hover:scale-105 transition-all duration-200 flex items-center justify-center gap-2"
+                        >
+                          <Download className="w-5 h-5" />
+                          Använd denna poster
+                        </button>
+                        
+                        <p className="text-xs text-gray-500 text-center">
+                          Klicka för att anpassa med text och beställa
+                        </p>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            ) : (
+              <div className="text-center py-12">
+                <p className="text-gray-500">
+                  Inga tidigare generationer att visa ännu. Generera några AI-posters så sparas de här automatiskt!
+                </p>
+              </div>
+            )}
+
+            {generationHistory.length > 4 && (
+              <div className="text-center mt-8 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                <p className="text-sm text-blue-800">
+                  💾 Visar senaste {Math.min(4, generationHistory.length)} generationer av {generationHistory.length} totalt. Sparade permanent i din webbläsare!
+                </p>
+              </div>
+            )}
           </div>
         )}
       </div>
