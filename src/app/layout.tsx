@@ -78,6 +78,8 @@ export default function RootLayout({
   return (
     <html lang="sv">
       <head>
+        {/* Enkla lösning: Bara tillåt light mode */}
+        <meta name="color-scheme" content="only light" />
         {/* Behåll meta tags för att hjälpa översättare att förstå språk */}
       </head>
       <body className="antialiased font-sans">
