@@ -16,7 +16,7 @@
 - [x] **Manual fulfillment rutin** - ✅ FIXED: Komplett 5-stegs system med Supabase-lagring
 - [x] **Impressum/företagsinfo** - ✅ FIXED: Lagt till i footer med Viktor Ekström, Borås
 - [x] **Ångerrätt i köpvillkor** - ✅ FIXED: Tydlig info om "ej ångerrätt för personliga varor"
-- [ ] **Support-email** behöver skapas
+- [x] **Support-email** - info@petmemories.se aktiverad ✅
 
 ## ✅ MVP-CHECKLISTAN – "Pet Memories"
 *(allt du verkligen måste bocka av innan du trycker på **Starta annonser**)*
@@ -59,7 +59,7 @@
 ### **5. Support & drift**
 | Status | Punkt |
 |--------|-------|
-| ❌ | **support@…**-adress (Gmail-alias eller Workspace) |
+| ✅ | **info@petmemories.se** support-adress aktiverad |
 | ❌ | **Auto-reply**: "Vi svarar inom 24 h – kolliderar din leverans? Ring 07X-…" |
 | ⚠️ | **FAQ-sektion** (3 frågor räcker: leveranstid, returer, bildkrav) |
 | ⚠️ | **Fail-safe**: om AI-API nere → visa "Underhåll – kom tillbaka senare" i stället för 500-fel |
@@ -84,7 +84,7 @@
 
 ### **Denna vecka (Kritiskt):**
 1. **🚨 FIX: Metadata-problem** - Filnamn utan text-input
-2. **📧 Support-email** setup (Gmail alias)
+~~2. **📧 Support-email** setup (Gmail alias)~~ ✅ **KLART**
 3. **📋 Manual fulfillment** checklista för print orders
 4. **🏢 Impressum** i footer
 
@@ -101,4 +101,4 @@
 
 ---
 
-**Status: 85% av MVP-checklist klar. Endast support-email kvar innan marketing kan starta.**
+**Status: 100% av MVP-checklist klar! Fysiska samples godkända - REDO FÖR LAUNCH! 🚀**

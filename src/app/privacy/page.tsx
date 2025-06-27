@@ -129,8 +129,8 @@ export default function PrivacyPolicy() {
               
               <p className="mt-4">
                 För att utöva dessa rättigheter, kontakta oss på: 
-                <a href="mailto:viktorlinus@gmail.com" className="text-orange-600 hover:text-orange-700 font-semibold">
-                  viktorlinus@gmail.com
+                <a href="mailto:info@petmemories.se" className="text-orange-600 hover:text-orange-700 font-semibold">
+                  info@petmemories.se
                 </a>
               </p>
             </section>
@@ -183,7 +183,7 @@ export default function PrivacyPolicy() {
               </p>
               <div className="bg-gray-50 p-4 rounded-lg">
                 <p><strong>PetMemories</strong></p>
-                <p>E-post: <a href="mailto:viktorlinus@gmail.com" className="text-orange-600 hover:text-orange-700 font-semibold">viktorlinus@gmail.com</a></p>
+                <p>E-post: <a href="mailto:info@petmemories.se" className="text-orange-600 hover:text-orange-700 font-semibold">info@petmemories.se</a></p>
               </div>
               
               <p className="mt-4">

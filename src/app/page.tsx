@@ -553,7 +553,7 @@ export default function HomePage() {
           
           {/* Subtil företagsinfo */}
           <div className="text-center text-xs text-gray-500 border-t border-gray-800 pt-4">
-            <p>PetMemories (hobbyverksamhet) • Viktor Ekström • Borås, Sverige • viktorlinus@gmail.com</p>
+            <p>PetMemories (hobbyverksamhet) • Viktor Ekström • Borås, Sverige • info@petmemories.se</p>
           </div>
         </div>
       </footer>

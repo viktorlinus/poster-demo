@@ -302,10 +302,10 @@ export default function TermsOfService() {
                 <div className="bg-white p-4 rounded-lg inline-block">
                   <p className="font-semibold text-gray-900">PetMemories</p>
                   <a 
-                    href="mailto:viktorlinus@gmail.com" 
+                    href="mailto:info@petmemories.se" 
                     className="text-orange-600 hover:text-orange-700 font-semibold text-lg"
                   >
-                    viktorlinus@gmail.com
+                    info@petmemories.se
                   </a>
                 </div>
               </div>
