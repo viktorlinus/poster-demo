@@ -95,7 +95,7 @@ export default function MobileTextEditor({
           <span className="font-medium text-gray-900">Text på poster</span>
           <div className="flex gap-1">
             <button
-              onClick={() => setShowText(false)}
+              onClick={() => {setShowText(false); setActiveTab('layout');}}
               className={`px-3 py-1 text-xs rounded-l-lg border transition-colors ${
                 !showText
                   ? 'bg-blue-600 text-white border-blue-600'
@@ -141,57 +141,59 @@ export default function MobileTextEditor({
         </div>
       </div>
 
-      {/* Tab Navigation - bara visa när text är aktiverat */}
-      {showText && (
-        <div className="bg-white border-t border-gray-200 flex-shrink-0">
-          <div className="flex">
-            <button
-              onClick={() => {setActiveTab('text'); setSettingsMinimized(false);}}
-              className={`flex-1 py-3 px-4 text-sm font-medium text-center border-b-2 transition-colors ${
-                activeTab === 'text'
-                  ? 'border-blue-500 text-blue-600 bg-blue-50'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-              }`}
-            >
-              📝 Text
-            </button>
-            <button
-              onClick={() => {setActiveTab('colors'); setSettingsMinimized(false);}}
-              className={`flex-1 py-3 px-4 text-sm font-medium text-center border-b-2 transition-colors ${
-                activeTab === 'colors'
-                  ? 'border-blue-500 text-blue-600 bg-blue-50'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-              }`}
-            >
-              🎨 Färger
-            </button>
-            <button
-              onClick={() => {setActiveTab('layout'); setSettingsMinimized(false);}}
-              className={`flex-1 py-3 px-4 text-sm font-medium text-center border-b-2 transition-colors ${
-                activeTab === 'layout'
-                  ? 'border-blue-500 text-blue-600 bg-blue-50'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-              }`}
-            >
-              🖼️ Layout
-            </button>
-            <button
-              onClick={() => setSettingsMinimized(!settingsMinimized)}
-              className="px-3 py-3 text-gray-500 hover:text-gray-700 border-b-2 border-transparent hover:border-gray-300 transition-colors"
-            >
-              {settingsMinimized ? '▲' : '▼'}
-            </button>
-          </div>
+      {/* Tab Navigation - Layout alltid synlig, Text/Färger bara när text aktiverat */}
+      <div className="bg-white border-t border-gray-200 flex-shrink-0">
+        <div className="flex">
+          {showText && (
+            <>
+              <button
+                onClick={() => {setActiveTab('text'); setSettingsMinimized(false);}}
+                className={`flex-1 py-3 px-4 text-sm font-medium text-center border-b-2 transition-colors ${
+                  activeTab === 'text'
+                    ? 'border-blue-500 text-blue-600 bg-blue-50'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                📝 Text
+              </button>
+              <button
+                onClick={() => {setActiveTab('colors'); setSettingsMinimized(false);}}
+                className={`flex-1 py-3 px-4 text-sm font-medium text-center border-b-2 transition-colors ${
+                  activeTab === 'colors'
+                    ? 'border-blue-500 text-blue-600 bg-blue-50'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                🎨 Färger
+              </button>
+            </>
+          )}
+          <button
+            onClick={() => {setActiveTab('layout'); setSettingsMinimized(false);}}
+            className={`${showText ? 'flex-1' : 'flex-1'} py-3 px-4 text-sm font-medium text-center border-b-2 transition-colors ${
+              activeTab === 'layout'
+                ? 'border-blue-500 text-blue-600 bg-blue-50'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+            }`}
+          >
+            🖼️ Layout
+          </button>
+          <button
+            onClick={() => setSettingsMinimized(!settingsMinimized)}
+            className="px-3 py-3 text-gray-500 hover:text-gray-700 border-b-2 border-transparent hover:border-gray-300 transition-colors"
+          >
+            {settingsMinimized ? '▲' : '▼'}
+          </button>
         </div>
-      )}
+      </div>
 
-      {/* Tab Content - bara visa när text är aktiverat OCH när inte minimerat */}
-      {showText && !settingsMinimized && (
+      {/* Tab Content - visa baserat på text-status och minimize-status */}
+      {!settingsMinimized && (
         <div className="bg-white border-t max-h-64 overflow-y-auto flex-shrink-0">
           <div className="p-3 space-y-3">
             
-            {/* TEXT TAB */}
-            {activeTab === 'text' && (
+            {/* TEXT TAB - bara när showText är true */}
+            {showText && activeTab === 'text' && (
               <div className="space-y-4">
                 {/* Pet name input - större på mobil */}
                 <div>
@@ -307,8 +309,8 @@ export default function MobileTextEditor({
               </div>
             )}
 
-            {/* COLORS TAB */}
-            {activeTab === 'colors' && (
+            {/* COLORS TAB - bara när showText är true */}
+            {showText && activeTab === 'colors' && (
               <div className="space-y-4">
                 <h3 className="text-lg font-semibold">Färginställningar</h3>
                 
@@ -412,12 +414,12 @@ export default function MobileTextEditor({
               </div>
             )}
 
-            {/* LAYOUT TAB */}
+            {/* LAYOUT TAB - alltid tillgänglig */}
             {activeTab === 'layout' && (
               <div className="space-y-4">
                 <h3 className="text-lg font-semibold">Layout & placering</h3>
                 
-                {/* Format selector */}
+                {/* Format selector - alltid synlig */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Posterstorlek</label>
                   <div className="grid grid-cols-2 gap-2">
@@ -439,38 +441,40 @@ export default function MobileTextEditor({
                   </div>
                 </div>
                 
-                {/* Image controls */}
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Bildstorlek: {Math.round(imageScale * 100)}%
-                    </label>
-                    <input
-                      type="range"
-                      min="0.5"
-                      max="0.9"
-                      step="0.05"
-                      value={imageScale}
-                      onChange={(e) => setImageScale(Number(e.target.value))}
-                      className="w-full h-3 bg-gray-200 rounded-lg appearance-none cursor-pointer slider-thumb"
-                    />
-                  </div>
+                {/* Image controls - bara när text är aktiverat */}
+                {showText && (
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Bildstorlek: {Math.round(imageScale * 100)}%
+                      </label>
+                      <input
+                        type="range"
+                        min="0.5"
+                        max="0.9"
+                        step="0.05"
+                        value={imageScale}
+                        onChange={(e) => setImageScale(Number(e.target.value))}
+                        className="w-full h-3 bg-gray-200 rounded-lg appearance-none cursor-pointer slider-thumb"
+                      />
+                    </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Bildposition: {imageVerticalPosition === 0 ? 'Topp' : imageVerticalPosition === 0.5 ? 'Mitten' : imageVerticalPosition === 1 ? 'Botten' : Math.round(imageVerticalPosition * 100) + '%'}
-                    </label>
-                    <input
-                      type="range"
-                      min="0"
-                      max="1"
-                      step="0.1"
-                      value={imageVerticalPosition}
-                      onChange={(e) => setImageVerticalPosition(Number(e.target.value))}
-                      className="w-full h-3 bg-gray-200 rounded-lg appearance-none cursor-pointer slider-thumb"
-                    />
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Bildposition: {imageVerticalPosition === 0 ? 'Topp' : imageVerticalPosition === 0.5 ? 'Mitten' : imageVerticalPosition === 1 ? 'Botten' : Math.round(imageVerticalPosition * 100) + '%'}
+                      </label>
+                      <input
+                        type="range"
+                        min="0"
+                        max="1"
+                        step="0.1"
+                        value={imageVerticalPosition}
+                        onChange={(e) => setImageVerticalPosition(Number(e.target.value))}
+                        className="w-full h-3 bg-gray-200 rounded-lg appearance-none cursor-pointer slider-thumb"
+                      />
+                    </div>
                   </div>
-                </div>
+                )}
               </div>
             )}
           </div>
