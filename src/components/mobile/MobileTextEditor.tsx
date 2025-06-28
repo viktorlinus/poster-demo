@@ -66,6 +66,7 @@ export default function MobileTextEditor({
 }: MobileTextEditorProps) {
   const [activeTab, setActiveTab] = useState<TabType>('text');
   const [showPricing, setShowPricing] = useState(false);
+  const [settingsMinimized, setSettingsMinimized] = useState(false);
 
   // Beräkna priser
   const digitalPrice = 79;
@@ -145,7 +146,7 @@ export default function MobileTextEditor({
         <div className="bg-white border-t border-gray-200 flex-shrink-0">
           <div className="flex">
             <button
-              onClick={() => setActiveTab('text')}
+              onClick={() => {setActiveTab('text'); setSettingsMinimized(false);}}
               className={`flex-1 py-3 px-4 text-sm font-medium text-center border-b-2 transition-colors ${
                 activeTab === 'text'
                   ? 'border-blue-500 text-blue-600 bg-blue-50'
@@ -155,7 +156,7 @@ export default function MobileTextEditor({
               📝 Text
             </button>
             <button
-              onClick={() => setActiveTab('colors')}
+              onClick={() => {setActiveTab('colors'); setSettingsMinimized(false);}}
               className={`flex-1 py-3 px-4 text-sm font-medium text-center border-b-2 transition-colors ${
                 activeTab === 'colors'
                   ? 'border-blue-500 text-blue-600 bg-blue-50'
@@ -165,7 +166,7 @@ export default function MobileTextEditor({
               🎨 Färger
             </button>
             <button
-              onClick={() => setActiveTab('layout')}
+              onClick={() => {setActiveTab('layout'); setSettingsMinimized(false);}}
               className={`flex-1 py-3 px-4 text-sm font-medium text-center border-b-2 transition-colors ${
                 activeTab === 'layout'
                   ? 'border-blue-500 text-blue-600 bg-blue-50'
@@ -174,12 +175,18 @@ export default function MobileTextEditor({
             >
               🖼️ Layout
             </button>
+            <button
+              onClick={() => setSettingsMinimized(!settingsMinimized)}
+              className="px-3 py-3 text-gray-500 hover:text-gray-700 border-b-2 border-transparent hover:border-gray-300 transition-colors"
+            >
+              {settingsMinimized ? '▲' : '▼'}
+            </button>
           </div>
         </div>
       )}
 
-      {/* Tab Content - bara visa när text är aktiverat */}
-      {showText && (
+      {/* Tab Content - bara visa när text är aktiverat OCH när inte minimerat */}
+      {showText && !settingsMinimized && (
         <div className="bg-white border-t max-h-64 overflow-y-auto flex-shrink-0">
           <div className="p-3 space-y-3">
             
@@ -200,7 +207,7 @@ export default function MobileTextEditor({
 
                 {/* Memorial text - större textarea */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Minnestext</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Undertext</label>
                   <textarea
                     value={memorialText}
                     onChange={(e) => setMemorialText(e.target.value)}
@@ -226,7 +233,7 @@ export default function MobileTextEditor({
 
                 {/* Memorial font selector - NYTT! */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Minnestextfont</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Undertextfont</label>
                   <select
                     value={memorialFont}
                     onChange={(e) => setMemorialFont(e.target.value)}
@@ -327,7 +334,7 @@ export default function MobileTextEditor({
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-3">Minnestextfärg</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-3">Undertextfärg</label>
                     <div className="flex items-center gap-3">
                       <input
                         type="color"
