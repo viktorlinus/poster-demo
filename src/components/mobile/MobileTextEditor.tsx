@@ -202,7 +202,7 @@ export default function MobileTextEditor({
                     type="text"
                     value={petName}
                     onChange={(e) => setPetName(e.target.value)}
-                    className="w-full p-4 border border-gray-300 rounded-lg text-base focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full p-4 border border-gray-300 rounded-lg text-base text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     placeholder="Bella"
                   />
                 </div>
@@ -213,7 +213,7 @@ export default function MobileTextEditor({
                   <textarea
                     value={memorialText}
                     onChange={(e) => setMemorialText(e.target.value)}
-                    className="w-full p-4 border border-gray-300 rounded-lg text-base focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full p-4 border border-gray-300 rounded-lg text-base text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     rows={3}
                     placeholder="2019 - 2024 • Vårt älskade husdjur"
                   />

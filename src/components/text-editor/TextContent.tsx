@@ -61,7 +61,7 @@ export default function TextContent({
             type="text"
             value={petName}
             onChange={(e) => setPetName(e.target.value)}
-            className="w-full p-2 border border-gray-300 rounded text-sm focus:ring-1 focus:ring-blue-500"
+            className="w-full p-2 border border-gray-300 rounded text-sm text-gray-900 focus:ring-1 focus:ring-blue-500"
             placeholder="Bella"
           />
         </div>
@@ -71,7 +71,7 @@ export default function TextContent({
           <textarea
             value={memorialText}
             onChange={(e) => setMemorialText(e.target.value)}
-            className="w-full p-2 border border-gray-300 rounded text-sm focus:ring-1 focus:ring-blue-500"
+            className="w-full p-2 border border-gray-300 rounded text-sm text-gray-900 focus:ring-1 focus:ring-blue-500"
             rows={2}
             placeholder="2019 - 2024 • Vårt älskade husdjur"
           />
