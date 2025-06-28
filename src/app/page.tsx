@@ -136,7 +136,7 @@ export default function HomePage() {
       icon: <Home className="w-8 h-8 text-green-600" />,
       title: "Levereras hem",
       desc: "Digital fil direkt eller tryck levererat",
-      example: "/images/poster.png"
+      example: "/images/leverans.jpg"
     }
   ];
 

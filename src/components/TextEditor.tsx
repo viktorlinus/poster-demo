@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { getStripe } from '@/lib/stripe';
 import { PosterFormat, getDefaultFormat } from '@/lib/posterFormats';
 
@@ -16,6 +16,7 @@ import LayoutControls from './text-editor/LayoutControls';
 import PricingControls from './text-editor/PricingControls';
 import CanvasPreview from './text-editor/CanvasPreview';
 import FormatSelector from './text-editor/FormatSelector';
+import MobileTextEditor from './mobile/MobileTextEditor';
 
 interface TextEditorProps {
   backgroundImageUrl: string;
@@ -49,6 +50,19 @@ export default function TextEditor({ backgroundImageUrl, onCancel, style }: Text
   
   // App state
   const [isCheckingOut, setIsCheckingOut] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+
+  // Detect mobile screen size
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 1024); // lg breakpoint
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   const fonts = [
     // Script/Handwriting (för namn)
@@ -139,34 +153,66 @@ export default function TextEditor({ backgroundImageUrl, onCancel, style }: Text
     }
   };
 
+  // Render mobile version on small screens
+  if (isMobile) {
+    return (
+      <MobileTextEditor
+        petName={petName}
+        setPetName={setPetName}
+        memorialText={memorialText}
+        setMemorialText={setMemorialText}
+        showText={showText}
+        setShowText={setShowText}
+        selectedFont={selectedFont}
+        setSelectedFont={setSelectedFont}
+        memorialFont={memorialFont}
+        setMemorialFont={setMemorialFont}
+        nameSize={nameSize}
+        setNameSize={setNameSize}
+        textSize={textSize}
+        setTextSize={setTextSize}
+        textColor={textColor}
+        setTextColor={setTextColor}
+        memorialColor={memorialColor}
+        setMemorialColor={setMemorialColor}
+        imageScale={imageScale}
+        setImageScale={setImageScale}
+        imageVerticalPosition={imageVerticalPosition}
+        setImageVerticalPosition={setImageVerticalPosition}
+        textSpacing={textSpacing}
+        setTextSpacing={setTextSpacing}
+        textVerticalPosition={textVerticalPosition}
+        setTextVerticalPosition={setTextVerticalPosition}
+        backgroundColor={backgroundColor}
+        setBackgroundColor={setBackgroundColor}
+        selectedFormat={selectedFormat}
+        setSelectedFormat={setSelectedFormat}
+        fonts={fonts}
+        isCheckingOut={isCheckingOut}
+        onCheckout={handleCheckout}
+        onCancel={onCancel}
+        canvasRef={canvasRef}
+        canvasKey={canvasKey}
+      />
+    );
+  }
+
+  // Desktop version
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Mobile Header */}
-      <div className="bg-white shadow-sm p-3 lg:hidden">
-        <div className="flex items-center justify-between">
-          <h1 className="text-lg font-bold">Anpassa poster</h1>
-          <button 
-            onClick={onCancel}
-            className="text-gray-600 text-sm px-3 py-1 rounded bg-gray-100"
-          >
-            ← Tillbaka
-          </button>
-        </div>
-      </div>
-
-      <div className="max-w-6xl mx-auto p-3 lg:p-6">
+      <div className="max-w-6xl mx-auto p-6">
         <div className="grid lg:grid-cols-5 gap-4">
           
-          {/* Canvas - Visas FÖRST på mobil */}
-          <div className="lg:col-span-3 order-1">
+          {/* Canvas */}
+          <div className="lg:col-span-3">
             <CanvasPreview 
               canvasRef={canvasRef}
               canvasKey={canvasKey}
             />
           </div>
 
-          {/* Controls - Visas EFTER bilden på mobil */}
-          <div className="lg:col-span-2 order-2">
+          {/* Controls */}
+          <div className="lg:col-span-2">
             <div className="bg-white rounded-lg shadow-lg p-4 space-y-6">
               
               <FormatSelector 
