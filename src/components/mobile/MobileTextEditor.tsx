@@ -46,7 +46,7 @@ interface MobileTextEditorProps {
   onCancel: () => void;
   
   // Canvas
-  canvasRef: React.RefObject<HTMLCanvasElement>;
+  canvasRef: React.RefObject<HTMLCanvasElement | null>;
   canvasKey: string;
 }
 
