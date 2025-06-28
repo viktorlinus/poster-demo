@@ -472,7 +472,7 @@ export default function GenerateAIPoster() {
                 ></div>
               </div>
               <p className="text-gray-600 text-sm">
-                AI:n analyserar bilden och skapar konstminnningar... Detta tar vanligtvis 30-60 sekunder.
+                AI:n analyserar bilden och skapar konstposters... Detta tar vanligtvis 30-60 sekunder.
               </p>
             </div>
           </div>

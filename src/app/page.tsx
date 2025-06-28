@@ -306,6 +306,145 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* Svenska Konkurrensfördelar */}
+      <section className="px-4 py-16 bg-gradient-to-br from-blue-50 to-indigo-100">
+          <div className="max-w-7xl mx-auto">
+            <div className="text-center mb-12">
+              <div className="inline-flex items-center gap-2 bg-red-500 text-white px-4 py-2 rounded-full font-semibold mb-4">
+                <span className="text-sm">🔥 LANSERINGS-REA</span>
+              </div>
+              <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+                Varför välja PetMemories?
+              </h2>
+              <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+                Vi erbjuder samma kvalitet som traditionella svenska tjänster, men snabbare, billigare och med mer variation.
+              </p>
+            </div>
+            
+            <div className="grid lg:grid-cols-2 gap-12 items-start mb-12">
+              {/* Bild-sektion - visas först på mobil */}
+              <div className="text-center lg:order-2">
+                <div className="bg-white rounded-2xl p-6 shadow-xl">
+                  <div className="mb-4">
+                    <h3 className="text-xl font-bold text-gray-900 mb-2">Professionell AI-konst</h3>
+                    <p className="text-gray-600 text-sm">Handgjord kvalitet på 5 minuter</p>
+                  </div>
+                  
+                  <div className="aspect-[4/3] rounded-xl overflow-hidden bg-gray-100 mb-4">
+                    <Image
+                      src="/images/hundar-efter.png"
+                      alt="AI-genererad konst - professionell kvalitet"
+                      width={400}
+                      height={300}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  
+                  <div className="text-center">
+                    <div className="inline-flex items-center gap-2 bg-gradient-to-r from-green-100 to-blue-100 px-4 py-2 rounded-full">
+                      <span className="text-green-600 font-semibold text-sm">✨ AI-genererad på 5 minuter</span>
+                    </div>
+                    <p className="text-xs text-gray-500 mt-2">Charlie & Chloé - Akvarell stil</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Jämförelse-kort - visas som andra på mobil */}
+              <div className="lg:order-1">
+                <div className="bg-white rounded-xl p-8 shadow-lg border border-blue-200">
+                  <h3 className="text-2xl font-bold text-gray-900 mb-8 text-center">Varför välja PetMemories?</h3>
+                  
+                  <div className="space-y-6">
+                    {/* Vi erbjuder */}
+                    <div className="bg-green-50 border border-green-200 rounded-lg p-6">
+                      <h4 className="text-xl font-bold text-green-800 mb-4">Vi erbjuder:</h4>
+                      <ul className="space-y-2 text-gray-700">
+                        <li className="flex items-center gap-3">
+                          <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                          <span>5 minuters AI-generering</span>
+                        </li>
+                        <li className="flex items-center gap-3">
+                          <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                          <span>299kr premium print (20% REA)</span>
+                        </li>
+                        <li className="flex items-center gap-3">
+                          <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                          <span>6+ olika AI-konststilar</span>
+                        </li>
+                        <li className="flex items-center gap-3">
+                          <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                          <span>Preview innan köp</span>
+                        </li>
+                        <li className="flex items-center gap-3">
+                          <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                          <span>Svensk support & EU-datalagring</span>
+                        </li>
+                      </ul>
+                    </div>
+                    
+                    {/* Andra erbjuder */}
+                    <div className="bg-red-50 border border-red-200 rounded-lg p-6">
+                      <h4 className="text-xl font-bold text-red-800 mb-4">Andra erbjuder:</h4>
+                      <ul className="space-y-2 text-gray-700">
+                        <li className="flex items-center gap-3">
+                          <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+                          <span>3-7 dagars väntetid</span>
+                        </li>
+                        <li className="flex items-center gap-3">
+                          <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+                          <span>539-800kr för samma storlek</span>
+                        </li>
+                        <li className="flex items-center gap-3">
+                          <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+                          <span>3-5 förutbestämda stilar</span>
+                        </li>
+                        <li className="flex items-center gap-3">
+                          <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+                          <span>Betala innan du ser resultatet</span>
+                        </li>
+                        <li className="flex items-center gap-3">
+                          <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+                          <span>Lång e-post-kommunikation</span>
+                        </li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            {/* CTA i egen kolumn under de andra */}
+            <div className="text-center">
+              <Link href="/generera">
+                <button className="bg-gradient-to-r from-orange-500 to-pink-500 text-white px-12 py-5 rounded-lg font-semibold text-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 flex items-center justify-center gap-3 mx-auto">
+                  <Sparkles className="w-6 h-6" />
+                  Testa 20% REA nu
+                </button>
+              </Link>
+            </div>
+          
+          {/* Bonus info */}
+          <div className="mt-12 text-center">
+            <div className="bg-white/80 backdrop-blur-sm rounded-xl p-6 max-w-4xl mx-auto">
+              <div className="grid md:grid-cols-3 gap-6 text-sm">
+                <div className="flex items-center justify-center gap-2">
+                  <Shield className="w-5 h-5 text-green-500" />
+                  <span className="text-gray-700">Svenskt företag med EU-datalagring</span>
+                </div>
+                <div className="flex items-center justify-center gap-2">
+                  <Heart className="w-5 h-5 text-red-500" />
+                  <span className="text-gray-700">Över 500 nöjda husdjursägare</span>
+                </div>
+                <div className="flex items-center justify-center gap-2">
+                  <Star className="w-5 h-5 text-yellow-500" />
+                  <span className="text-gray-700">Preview innan köp - noll risk</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* How It Works */}
       <section id="how-it-works" className="px-4 py-16 bg-white/50">
         <div className="max-w-6xl mx-auto">
@@ -313,7 +452,7 @@ export default function HomePage() {
             Så enkelt fungerar det
           </h2>
           <p className="text-lg text-gray-600 text-center mb-12 max-w-2xl mx-auto">
-            Från vanligt foto till konstminnning på bara några minuter. Se exakt hur processen fungerar.
+            Från vanligt foto till konstposter på bara några minuter. Se exakt hur processen fungerar.
           </p>
           
           <div className="grid md:grid-cols-3 gap-8">
@@ -477,7 +616,11 @@ export default function HomePage() {
               <div className="text-center">
                 <div className="text-4xl mb-4">🖼️</div>
                 <h3 className="text-2xl font-bold text-gray-900 mb-2">Premium Print</h3>
-                <div className="text-3xl font-bold text-orange-600 mb-4">Från 299kr</div>
+                <div className="mb-4">
+                  <div className="text-lg text-gray-400 line-through mb-1">Från 374kr</div>
+                  <div className="text-3xl font-bold text-orange-600">Från 299kr</div>
+                  <div className="text-sm text-red-500 font-semibold">🔥 20% LANSERINGS-REA</div>
+                </div>
                 <ul className="text-left space-y-3 mb-6">
                   <li className="flex items-center gap-2">
                     <Check className="w-4 h-4 text-green-500" />

@@ -36,6 +36,18 @@ const FAQ = () => {
       answer: "Du ser preview-bilder innan betalning, så du kan välja din favorit först. Om din mottagna poster är skadad eller defekt erbjuder vi naturligtvis ersättning eller återbetalning."
     },
     {
+      question: "Varför AI istället för handgjorda porträtt?",
+      answer: "AI ger dig samma konstnärliga kvalitet som traditionella porträtt, men på 5 minuter istället för 7 dagar och till mindre än halva priset. Du får dessutom välja mellan många olika stilar och kan se preview innan köp. Många kunder tycker våra AI-posters är lika vackra som handgjorda alternativ."
+    },
+    {
+      question: "Vad är skillnaden mot andra svenska tjänster?",
+      answer: "Andra svenska tjänster tar 3-7 dagar och kostar 539-800kr. Vi levererar samma kvalitet på 5 minuter för 299kr (eller 79kr digitalt). De erbjuder 3-5 förutbestämda stilar, vi erbjuder 6+ stilar med AI-precision som kan anpassas perfekt för ditt husdjur."
+    },
+    {
+      question: "Är AI-kvaliteten lika bra som traditionella porträtt?",
+      answer: "Ja! Våra kunder är ofta förvånade över kvaliteten. AI:n har tränats på tusentals professionella konstporträtt och kan fånga ditt husdjurs personlighet och kännetecken mycket väl. Plus att du får välja mellan 2 alternativ så du kan hitta den som passar bäst."
+    },
+    {
       question: "Hur många genereringar får jag per dag?",
       answer: "Du får 3 gratis AI-genereringar per dag för att testa tjänsten. Varje generering ger dig 2 alternativ att välja mellan. Detta gäller preview-funktionen innan köp."
     },
@@ -109,7 +121,7 @@ const FAQ = () => {
             Har du fler frågor?
           </p>
           <a
-            href="mailto:vikorlinus@gmail.com"
+            href="mailto:info@petmemories.se"
             className="inline-flex items-center gap-2 bg-gradient-to-r from-orange-500 to-pink-500 text-white px-6 py-3 rounded-lg font-semibold hover:shadow-lg transform hover:scale-105 transition-all duration-200"
           >
             Kontakta oss
