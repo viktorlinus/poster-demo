@@ -1,4 +1,6 @@
 import { PosterFormat } from '@/lib/posterFormats';
+import { businessEvents } from '@/lib/analytics';
+import { useEffect } from 'react';
 
 interface PricingControlsProps {
   isCheckingOut: boolean;
@@ -14,6 +16,17 @@ export default function PricingControls({ isCheckingOut, onCheckout, onCancel, s
   
   const digitalPrice = basePriceDigital; // Digital pris är alltid 79kr oavsett storlek
   const printPrice = basePricePrint + (selectedFormat.priceModifier || 0);
+
+  // Track pricing viewed när komponenten visas
+  useEffect(() => {
+    businessEvents.pricingViewed('Digital');
+  }, []);
+
+  const handleCheckout = (tier: 'digital' | 'print') => {
+    const price = tier === 'digital' ? digitalPrice : printPrice;
+    businessEvents.checkoutStarted(tier === 'digital' ? 'Digital' : 'Print', price * 100); // Convert to öre
+    onCheckout(tier);
+  };
   return (
     <div className="border-t pt-4 space-y-3">
       <h4 className="font-medium text-sm text-gray-900">💳 Köp poster</h4>
@@ -28,7 +41,7 @@ export default function PricingControls({ isCheckingOut, onCheckout, onCancel, s
           <div className="text-lg font-bold text-blue-900">{digitalPrice}kr</div>
         </div>
         <button
-          onClick={() => onCheckout('digital')}
+          onClick={() => handleCheckout('digital')}
           disabled={isCheckingOut}
           className="w-full bg-blue-600 text-white py-2 px-3 rounded text-sm hover:bg-blue-700 disabled:opacity-50 transition-colors"
         >
@@ -49,7 +62,7 @@ export default function PricingControls({ isCheckingOut, onCheckout, onCancel, s
           <div className="text-lg font-bold text-green-900">{printPrice}kr</div>
         </div>
         <button
-          onClick={() => onCheckout('print')}
+          onClick={() => handleCheckout('print')}
           disabled={isCheckingOut}
           className="w-full bg-green-600 text-white py-2 px-3 rounded text-sm hover:bg-green-700 disabled:opacity-50 transition-colors"
         >

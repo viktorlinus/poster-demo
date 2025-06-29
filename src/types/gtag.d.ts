@@ -1,4 +1,4 @@
-// Global gtag types for Google Analytics
+// Global gtag types for Google Analytics and Meta Pixel
 declare global {
   interface Window {
     gtag: (
@@ -24,6 +24,12 @@ declare global {
       }
     ) => void;
     dataLayer: Record<string, unknown>[];
+    // Meta Pixel types
+    fbq: (
+      command: 'track' | 'init' | 'trackCustom',
+      eventName: string,
+      parameters?: Record<string, any>
+    ) => void;
   }
 }
 

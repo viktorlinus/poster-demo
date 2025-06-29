@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { getStripe } from '@/lib/stripe';
 import { PosterFormat, getDefaultFormat } from '@/lib/posterFormats';
+import { businessEvents } from '@/lib/analytics';
 
 // Hooks
 import { useCanvasRenderer } from '@/hooks/useCanvasRenderer';
@@ -51,6 +52,11 @@ export default function TextEditor({ backgroundImageUrl, onCancel, style }: Text
   // App state
   const [isCheckingOut, setIsCheckingOut] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+
+  // Track text editor opened
+  useEffect(() => {
+    businessEvents.textEditorOpened();
+  }, []);
 
   // Detect mobile screen size
   useEffect(() => {

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import GoogleAnalytics from '@/components/GoogleAnalytics';
+import MetaPixel from '@/components/MetaPixel';
 import Analytics from '@/components/Analytics';
 import CookieConsent from '@/components/CookieConsent';
 import TranslationErrorBoundary from '@/components/TranslationErrorBoundary';
@@ -86,6 +87,7 @@ export default function RootLayout({
         <TranslationErrorBoundary>
           {/* TA BORT translate="no" härifrån - låt text översättas */}
           <GoogleAnalytics />
+          <MetaPixel />
           <Suspense fallback={null}>
             <Analytics />
           </Suspense>

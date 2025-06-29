@@ -1,6 +1,9 @@
 // Google Analytics 4 configuration
 export const GA_TRACKING_ID = process.env.NEXT_PUBLIC_GA_ID;
 
+// Meta Pixel configuration
+export const META_PIXEL_ID = '2123196551511928';
+
 // Track page views
 export const pageview = (url: string) => {
   if (typeof window !== 'undefined' && window.gtag) {
@@ -10,7 +13,21 @@ export const pageview = (url: string) => {
   }
 };
 
-// Track events
+// Google Analytics 4 E-commerce events
+export const gaEvent = (eventName: string, parameters?: Record<string, any>) => {
+  if (typeof window !== 'undefined' && window.gtag) {
+    window.gtag('event', eventName, parameters);
+  }
+};
+
+// Meta Pixel events
+export const fbEvent = (eventName: string, parameters?: Record<string, any>) => {
+  if (typeof window !== 'undefined' && window.fbq) {
+    window.fbq('track', eventName, parameters);
+  }
+};
+
+// Legacy event function (keeping for backwards compatibility)
 export const event = ({
   action,
   category,
@@ -63,71 +80,113 @@ export const purchase = ({
 export const businessEvents = {
   // AI Generation started
   aiGenerationStarted: (style: string) => {
-    event({
-      action: 'ai_generation_started',
-      category: 'engagement',
-      label: style,
+    // GA4 Standard E-commerce Event
+    gaEvent('view_item', {
+      currency: 'SEK',
+      value: 299, // Base price
+      items: [{
+        item_id: `ai_generation_${style}`,
+        item_name: `AI Poster - ${style}`,
+        item_category: 'AI Generation',
+        item_variant: style,
+        price: 299,
+        quantity: 1
+      }]
+    });
+    
+    // Meta Pixel
+    fbEvent('ViewContent', {
+      content_type: 'product',
+      content_category: 'AI Generation',
+      content_name: style
     });
   },
 
   // AI Generation completed
   aiGenerationCompleted: (style: string, timeSpent: number) => {
-    event({
-      action: 'ai_generation_completed',
-      category: 'engagement',
-      label: style,
-      value: timeSpent,
+    // GA4 Custom Event
+    gaEvent('ai_generation_completed', {
+      item_name: `AI Poster - ${style}`,
+      item_category: 'AI Generation',
+      engagement_time_msec: timeSpent * 1000
     });
   },
 
   // Text editor opened
   textEditorOpened: () => {
-    event({
-      action: 'text_editor_opened',
-      category: 'engagement',
+    // GA4 Engagement Event
+    gaEvent('text_editor_opened', {
+      engagement_time_msec: 1000 // Base engagement
     });
   },
 
   // Pricing viewed
   pricingViewed: (tier: string) => {
-    event({
-      action: 'pricing_viewed',
-      category: 'conversion',
-      label: tier,
+    // GA4 Standard E-commerce Event
+    gaEvent('view_item_list', {
+      item_list_id: 'pricing_tiers',
+      item_list_name: 'Pricing Options',
+      items: [{
+        item_id: tier,
+        item_name: `${tier} Poster`,
+        item_category: 'Poster',
+        item_variant: tier,
+        price: tier === 'Digital' ? 79 : tier === 'Print' ? 299 : 399,
+        quantity: 1
+      }]
     });
   },
 
   // Checkout started
   checkoutStarted: (tier: string, value: number) => {
-    event({
-      action: 'begin_checkout',
-      category: 'conversion',
-      label: tier,
-      value: value,
+    // GA4 Standard E-commerce Event
+    gaEvent('begin_checkout', {
+      currency: 'SEK',
+      value: value / 100,
+      items: [{
+        item_id: `poster_${tier.toLowerCase()}`,
+        item_name: `${tier} Poster`,
+        item_category: 'Poster',
+        item_variant: tier,
+        price: value / 100,
+        quantity: 1
+      }]
+    });
+    
+    // Meta Pixel
+    fbEvent('InitiateCheckout', {
+      content_name: tier,
+      value: value / 100,
+      currency: 'SEK'
     });
   },
 
   // Order completed
   orderCompleted: (orderId: string, tier: string, value: number, style: string) => {
-    // Standard purchase event
-    purchase({
-      transactionId: orderId,
-      value: value / 100, // Convert from öre to kronor
+    // GA4 Standard E-commerce Purchase Event
+    gaEvent('purchase', {
+      transaction_id: orderId,
+      value: value / 100,
+      currency: 'SEK',
       items: [{
-        item_id: orderId,
+        item_id: `poster_${tier.toLowerCase()}`,
         item_name: `${tier} Poster - ${style}`,
-        category: tier,
-        quantity: 1,
+        item_category: 'Poster',
+        item_variant: tier,
+        item_brand: 'PetMemories',
         price: value / 100,
-      }],
+        quantity: 1
+      }]
     });
 
-    // Additional business event
-    event({
-      action: 'order_completed',
-      category: 'conversion',
-      label: `${tier}_${style}`,
-      value: value,
+    // Meta Pixel Purchase event
+    fbEvent('Purchase', {
+      value: value / 100,
+      currency: 'SEK',
+      content_name: `${tier} Poster - ${style}`,
+      content_category: tier,
+      content_ids: [orderId],
+      num_items: 1
     });
   },
 };

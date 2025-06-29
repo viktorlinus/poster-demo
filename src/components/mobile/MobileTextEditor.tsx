@@ -1,6 +1,7 @@
 'use client';
 import { useState } from 'react';
 import { PosterFormat, POSTER_FORMATS } from '@/lib/posterFormats';
+import { businessEvents } from '@/lib/analytics';
 
 interface MobileTextEditorProps {
   // Text content state
@@ -71,6 +72,13 @@ export default function MobileTextEditor({
   // Beräkna priser
   const digitalPrice = 79;
   const printPrice = 299 + (selectedFormat.priceModifier || 0);
+
+  // Tracking för checkout i mobil editor
+  const handleMobileCheckout = (tier: 'digital' | 'print') => {
+    const price = tier === 'digital' ? digitalPrice : printPrice;
+    businessEvents.checkoutStarted(tier === 'digital' ? 'Digital' : 'Print', price * 100);
+    onCheckout(tier);
+  };
 
   const formatOptions = POSTER_FORMATS;
 
@@ -516,7 +524,7 @@ export default function MobileTextEditor({
                   <div className="text-2xl font-bold text-blue-900">{digitalPrice}kr</div>
                 </div>
                 <button
-                  onClick={() => onCheckout('digital')}
+                  onClick={() => handleMobileCheckout('digital')}
                   disabled={isCheckingOut}
                   className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50 transition-colors"
                 >
@@ -539,7 +547,7 @@ export default function MobileTextEditor({
                   <div className="text-2xl font-bold text-green-900">{printPrice}kr</div>
                 </div>
                 <button
-                  onClick={() => onCheckout('print')}
+                  onClick={() => handleMobileCheckout('print')}
                   disabled={isCheckingOut}
                   className="w-full bg-green-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-green-700 disabled:opacity-50 transition-colors"
                 >

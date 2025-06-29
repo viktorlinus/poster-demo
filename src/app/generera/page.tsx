@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { STYLE_CONFIGS, DEFAULT_STYLE, getStyleDisplayName, generateMemoryPrompts } from '@/lib/styles';
 import { saveGeneration, loadGenerations, type Generation } from '@/lib/generationHistory';
+import { businessEvents } from '@/lib/analytics';
 import TextEditor from '@/components/TextEditor';
 import {
   Upload, 
@@ -93,6 +94,9 @@ export default function GenerateAIPoster() {
 
   const handleGenerateClick = async () => {
     if (!file) return;
+    
+    // Track AI generation started
+    businessEvents.aiGenerationStarted(getStyleDisplayName(style));
     
     // Reset any previous rate limit errors
     setRateLimitError(null);
