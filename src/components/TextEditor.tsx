@@ -195,10 +195,11 @@ export default function TextEditor({ backgroundImageUrl, onCancel, style }: Text
         setSelectedFormat={setSelectedFormat}
         fonts={fonts}
         isCheckingOut={isCheckingOut}
-        onCheckout={handleCheckout}
+        createCleanCanvas={createCleanCanvas}
         onCancel={onCancel}
         canvasRef={canvasRef}
         canvasKey={canvasKey}
+        style={style}
       />
     );
   }

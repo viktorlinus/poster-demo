@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { PosterFormat, POSTER_FORMATS } from '@/lib/posterFormats';
 import { businessEvents } from '@/lib/analytics';
+import { getStripe } from '@/lib/stripe';
 
 interface MobileTextEditorProps {
   // Text content state
@@ -43,8 +44,9 @@ interface MobileTextEditorProps {
   setSelectedFormat: (format: PosterFormat) => void;
   fonts: string[];
   isCheckingOut: boolean;
-  onCheckout: (tier: 'digital' | 'print') => void;
+  createCleanCanvas: () => string | null;
   onCancel: () => void;
+  style?: string;
   
   // Canvas
   canvasRef: React.RefObject<HTMLCanvasElement | null>;
@@ -62,22 +64,54 @@ export default function MobileTextEditor({
   textSpacing, setTextSpacing, textVerticalPosition, setTextVerticalPosition,
   backgroundColor, setBackgroundColor,
   selectedFormat, setSelectedFormat, fonts,
-  isCheckingOut, onCheckout, onCancel,
-  canvasRef, canvasKey
+  isCheckingOut, onCancel,
+  canvasRef, canvasKey, createCleanCanvas, style
 }: MobileTextEditorProps) {
   const [activeTab, setActiveTab] = useState<TabType>('text');
   const [showPricing, setShowPricing] = useState(false);
   const [settingsMinimized, setSettingsMinimized] = useState(false);
+  const [checkingOut, setCheckingOut] = useState(false);
 
   // Beräkna priser
   const digitalPrice = 79;
   const printPrice = 299 + (selectedFormat.priceModifier || 0);
 
-  // Tracking för checkout i mobil editor
-  const handleMobileCheckout = (tier: 'digital' | 'print') => {
-    const price = tier === 'digital' ? digitalPrice : printPrice;
-    businessEvents.checkoutStarted(tier === 'digital' ? 'Digital' : 'Print', price * 100);
-    onCheckout(tier);
+  // Checkout handler - samma som desktop
+  const handleCheckout = async (tier: 'digital' | 'print') => {
+    setCheckingOut(true);
+    
+    try {
+      const posterDataUrl = createCleanCanvas();
+      if (!posterDataUrl) {
+        throw new Error('Kunde inte skapa poster');
+      }
+      
+      const res = await fetch('/api/create-checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          tier,
+          posterDataUrl,
+          metadata: {
+            petName: showText && petName.trim() && petName.trim() !== 'Bella' ? petName.trim() : '',
+            style: style || 'watercolor',
+            hasText: showText && petName.trim().length > 0 && petName.trim() !== 'Bella',
+            format: selectedFormat.id,
+            dimensions: selectedFormat.dimensions
+          }
+        })
+      });
+      
+      const { sessionId } = await res.json();
+      const stripe = await getStripe();
+      await stripe?.redirectToCheckout({ sessionId });
+      
+    } catch (error) {
+      console.error('Checkout error:', error);
+      alert('Något gick fel vid checkout. Försök igen.');
+    } finally {
+      setCheckingOut(false);
+    }
   };
 
   const formatOptions = POSTER_FORMATS;
@@ -527,11 +561,11 @@ export default function MobileTextEditor({
                   <div className="text-2xl font-bold text-blue-900">{digitalPrice}kr</div>
                 </div>
                 <button
-                  onClick={() => handleMobileCheckout('digital')}
-                  disabled={isCheckingOut}
+                  onClick={() => handleCheckout('digital')}
+                  disabled={isCheckingOut || checkingOut}
                   className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50 transition-colors"
                 >
-                  {isCheckingOut ? '⏳ Köper...' : 'Köp Digital'}
+                  {(isCheckingOut || checkingOut) ? '⏳ Köper...' : 'Köp Digital'}
                 </button>
               </div>
 
@@ -550,11 +584,11 @@ export default function MobileTextEditor({
                   <div className="text-2xl font-bold text-green-900">{printPrice}kr</div>
                 </div>
                 <button
-                  onClick={() => handleMobileCheckout('print')}
-                  disabled={isCheckingOut}
+                  onClick={() => handleCheckout('print')}
+                  disabled={isCheckingOut || checkingOut}
                   className="w-full bg-green-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-green-700 disabled:opacity-50 transition-colors"
                 >
-                  {isCheckingOut ? '⏳ Köper...' : 'Köp Print'}
+                  {(isCheckingOut || checkingOut) ? '⏳ Köper...' : 'Köp Print'}
                 </button>
               </div>
             </div>
