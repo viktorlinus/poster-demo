@@ -145,7 +145,7 @@ export default function HomePage() {
       setCurrentSlide((prev) => (prev + 1) % beforeAfterExamples.length);
     }, 5000);
     return () => clearInterval(timer);
-  }, []);
+  }, [beforeAfterExamples.length]);
 
   const nextSlide = () => {
     setCurrentSlide((prev) => (prev + 1) % beforeAfterExamples.length);

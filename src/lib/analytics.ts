@@ -14,14 +14,14 @@ export const pageview = (url: string) => {
 };
 
 // Google Analytics 4 E-commerce events
-export const gaEvent = (eventName: string, parameters?: Record<string, any>) => {
+export const gaEvent = (eventName: string, parameters?: Record<string, unknown>) => {
   if (typeof window !== 'undefined' && window.gtag) {
     window.gtag('event', eventName, parameters);
   }
 };
 
 // Meta Pixel events
-export const fbEvent = (eventName: string, parameters?: Record<string, any>) => {
+export const fbEvent = (eventName: string, parameters?: Record<string, unknown>) => {
   if (typeof window !== 'undefined' && window.fbq) {
     window.fbq('track', eventName, parameters);
   }

@@ -28,7 +28,7 @@ declare global {
     fbq: (
       command: 'track' | 'init' | 'trackCustom',
       eventName: string,
-      parameters?: Record<string, any>
+      parameters?: Record<string, unknown>
     ) => void;
   }
 }
