@@ -25,6 +25,9 @@ export default function MetaPixel() {
             'https://connect.facebook.net/en_US/fbevents.js');
             fbq('init', '${META_PIXEL_ID}');
             fbq('track', 'PageView');
+            
+            // Configure pixel to avoid false automatic events
+            fbq('set', 'autoConfig', false, '${META_PIXEL_ID}');
           `,
         }}
       />
