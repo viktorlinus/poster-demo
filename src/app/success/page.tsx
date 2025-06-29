@@ -1,6 +1,7 @@
 'use client';
 import { useSearchParams } from 'next/navigation';
 import { useEffect, useState, Suspense } from 'react';
+import { businessEvents } from '@/lib/analytics';
 
 interface OrderDetails {
   orderId: string;
@@ -49,6 +50,16 @@ function SuccessContent() {
           const res = await fetch(`/api/order-details?session_id=${sessionId}`);
           const data = await res.json();
           setOrderDetails(data);
+          
+          // Track successful order completion
+          if (data && data.orderId) {
+            businessEvents.orderCompleted(
+              data.orderId,
+              data.tier === 'digital' ? 'Digital' : 'Print',
+              data.amount,
+              data.style || 'watercolor'
+            );
+          }
           
         } catch (error) {
           console.error('Error confirming payment:', error);

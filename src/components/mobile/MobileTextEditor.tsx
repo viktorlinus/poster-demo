@@ -492,7 +492,10 @@ export default function MobileTextEditor({
       {/* Fixed köpknapp längst ner - mindre padding */}
       <div className="bg-white border-t p-3 flex-shrink-0">
         <button
-          onClick={() => setShowPricing(true)}
+          onClick={() => {
+            setShowPricing(true);
+            businessEvents.pricingViewed('Digital'); // Track mobile pricing viewed
+          }}
           className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg text-base font-semibold hover:bg-blue-700 transition-colors"
         >
           💳 Köp poster

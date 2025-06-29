@@ -97,6 +97,7 @@ export default function GenerateAIPoster() {
     
     // Track AI generation started
     businessEvents.aiGenerationStarted(getStyleDisplayName(style));
+    const generationStartTime = Date.now();
     
     // Reset any previous rate limit errors
     setRateLimitError(null);
@@ -176,6 +177,10 @@ export default function GenerateAIPoster() {
       setCurrentGenerating('Slutför generering...');
       clearInterval(streamInterval);
       setStreamingProgress(100);
+      
+      // Track AI generation completed
+      const completionTime = (Date.now() - generationStartTime) / 1000; // Convert to seconds
+      businessEvents.aiGenerationCompleted(getStyleDisplayName(style), completionTime);
       
       // SPARA I INDEXEDDB (persistent mellan sessions!)
       const successfulResults = results.filter(r => r.url && !r.error);
