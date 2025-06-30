@@ -1,5 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+export async function GET(request: NextRequest) {
+  console.log('🔥 DEBUG MOBILE GET - Request received!');
+  console.log('🔥 GET URL:', request.url);
+  console.log('🔥 GET Headers:', Object.fromEntries(request.headers.entries()));
+  
+  return NextResponse.json({ 
+    success: true, 
+    message: 'GET debug endpoint reached!',
+    timestamp: new Date().toISOString()
+  });
+}
+
 export async function POST(request: NextRequest) {
   console.log('🔥 DEBUG MOBILE - Request received!');
   console.log('🔥 Headers:', Object.fromEntries(request.headers.entries()));

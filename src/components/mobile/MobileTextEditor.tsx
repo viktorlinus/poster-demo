@@ -92,7 +92,20 @@ export default function MobileTextEditor({
       console.log('Mobile: Canvas created, dataURL length:', posterDataUrl.length, 'bytes');
       console.log('Mobile: Canvas size in MB:', (posterDataUrl.length / 1024 / 1024).toFixed(2), 'MB');
       
-      // Step 1: Save image to R2 temp storage
+      // Step 1: TEST - Enkelt GET request först
+      console.log('Mobile: Testing simple GET request...');
+      let testRes;
+      try {
+        testRes = await fetch('/api/debug-mobile?test=mobile', {
+          method: 'GET'
+        });
+        console.log('Mobile: GET test result:', testRes.status);
+      } catch (getError) {
+        console.error('Mobile: Even GET request failed:', getError);
+        throw new Error(`Grundläggande nätverksfel: ${getError instanceof Error ? getError.message : 'Okänt'}`);
+      }
+      
+      // Step 2: Om GET funkar, testa POST
       console.log('Mobile: Starting save image request...');
       let saveImageRes;
       try {
