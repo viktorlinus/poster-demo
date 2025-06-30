@@ -81,9 +81,12 @@ export default function MobileTextEditor({
     setCheckingOut(true);
     
     try {
+      console.log('Mobile: Starting checkout...');
       const posterDataUrl = createCleanCanvas();
+      console.log('Mobile: createCleanCanvas result:', posterDataUrl ? 'SUCCESS' : 'NULL');
+      
       if (!posterDataUrl) {
-        throw new Error('Kunde inte skapa poster');
+        throw new Error('Kunde inte skapa poster - canvas är null');
       }
       
       console.log('Mobile: Canvas created, dataURL length:', posterDataUrl.length, 'bytes');
@@ -104,7 +107,7 @@ export default function MobileTextEditor({
           dimensions: selectedFormat.dimensions
         }));
         
-        saveImageRes = await fetch('/api/save-temp-image', {
+        saveImageRes = await fetch('/api/debug-mobile', {
           method: 'POST',
           body: formData  // Ingen Content-Type header - låt browser sätta den
         });
