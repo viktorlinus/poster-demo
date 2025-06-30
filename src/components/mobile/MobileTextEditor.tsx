@@ -123,27 +123,19 @@ export default function MobileTextEditor({
         throw new Error(`POST-fel: ${smallPostError instanceof Error ? smallPostError.message : 'Okänt'}`);
       }
       
-      // Step 3: Mobil-vänlig blob-approach istället för dataURL
-      console.log('Mobile: Creating blob from canvas...');
+      // Step 3: Skapa ren canvas utan watermark (samma som desktop)
+      console.log('Mobile: Creating clean canvas...');
       
-      // Använd toBlob() istället för toDataURL() för mobil-kompatibilitet
-      const canvas = canvasRef.current;
-      if (!canvas) {
-        throw new Error('Canvas är inte tillgänglig');
+      const cleanDataUrl = createCleanCanvas();
+      if (!cleanDataUrl) {
+        throw new Error('Kunde inte skapa ren canvas');
       }
       
-      // Skapa blob asynkront (mobil-vänlig)
-      const blob = await new Promise<Blob>((resolve, reject) => {
-        canvas.toBlob((blob) => {
-          if (blob) {
-            resolve(blob);
-          } else {
-            reject(new Error('Kunde inte skapa blob från canvas'));
-          }
-        }, 'image/png', 0.9); // 90% kvalitet
-      });
+      // Konvertera clean dataURL till blob för mobil-kompatibilitet
+      const response = await fetch(cleanDataUrl);
+      const blob = await response.blob();
       
-      console.log('Mobile: Blob created, size:', blob.size, 'bytes');
+      console.log('Mobile: Clean blob created, size:', blob.size, 'bytes');
       console.log('Mobile: Blob size in MB:', (blob.size / 1024 / 1024).toFixed(2), 'MB');
       
       let saveImageRes;

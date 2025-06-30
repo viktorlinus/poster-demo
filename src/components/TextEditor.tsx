@@ -132,18 +132,17 @@ export default function TextEditor({ backgroundImageUrl, onCancel, style }: Text
         throw new Error('Canvas är inte tillgänglig');
       }
       
-      // Skapa blob asynkront (samma som mobil)
-      const blob = await new Promise<Blob>((resolve, reject) => {
-        canvas.toBlob((blob) => {
-          if (blob) {
-            resolve(blob);
-          } else {
-            reject(new Error('Kunde inte skapa blob från canvas'));
-          }
-        }, 'image/png', 0.9); // 90% kvalitet
-      });
+      // Skapa ren canvas utan watermark
+      const cleanDataUrl = createCleanCanvas();
+      if (!cleanDataUrl) {
+        throw new Error('Kunde inte skapa ren canvas');
+      }
       
-      console.log('Desktop: Blob created, size:', blob.size, 'bytes');
+      // Konvertera clean dataURL till blob
+      const response = await fetch(cleanDataUrl);
+      const blob = await response.blob();
+      
+      console.log('Desktop: Clean blob created, size:', blob.size, 'bytes');
       
       // Step 1: Save image to R2 temp storage med blob
       const formData = new FormData();
