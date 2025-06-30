@@ -40,6 +40,7 @@ export default function GenerateAIPoster() {
   const [rateLimitError, setRateLimitError] = useState<string | null>(null);
   const [generationHistory, setGenerationHistory] = useState<Generation[]>([]);
   const [isLoadingHistory, setIsLoadingHistory] = useState(true);
+  const [retryMessage, setRetryMessage] = useState<string | null>(null);
 
   // Simulate streaming progress during generation
   const simulateStreaming = () => {
@@ -101,6 +102,7 @@ export default function GenerateAIPoster() {
     
     // Reset any previous rate limit errors
     setRateLimitError(null);
+    setRetryMessage(null);
     
     // CHECK RATE LIMIT ONCE BEFORE STARTING
     try {
@@ -142,20 +144,54 @@ export default function GenerateAIPoster() {
         formData.append('quality', quality);
         formData.append('skipRateLimit', 'true');
         
-        try {
-          const res = await fetch('/api/preview', { 
-            method: 'POST', 
-            body: formData 
-          });
-          
-          const data = await res.json();
-          
-          const result = {
-            url: data.url || '',
-            promptName: promptData.name,
-            error: data.error,
-            quality: data.quality
-          };
+        // RETRY-LOGIK PÅ OPENAI API CALLS
+        const makePreviewRequest = async (retryCount = 0): Promise<PreviewResult> => {
+          try {
+            const res = await fetch('/api/preview', { 
+              method: 'POST', 
+              body: formData 
+            });
+            
+            if (res.status === 429 || res.status >= 500) {
+              throw new Error(`OpenAI API error: ${res.status}`);
+            }
+            
+            const data = await res.json();
+            
+            if (data.error && retryCount < 10) {
+              throw new Error(data.error);
+            }
+            
+            return {
+              url: data.url || '',
+              promptName: promptData.name,
+              error: data.error,
+              quality: data.quality
+            };
+            
+          } catch (apiError) {
+            if (retryCount < 10) {
+              // Visa retry-meddelande för denna bild
+              setRetryMessage(`Hög aktivitet just nu. Försöker skapa "${promptData.name}" igen om 10 sekunder... (${retryCount + 1}/10)`);
+              
+              console.log(`OpenAI API retry ${retryCount + 1}/10 för ${promptData.name}:`, apiError);
+              
+              await new Promise(resolve => setTimeout(resolve, 10000)); // 10 sekunder
+              return makePreviewRequest(retryCount + 1);
+            }
+            
+            // Efter 10 retries, returnera error
+            setRetryMessage(null);
+            return {
+              url: '',
+              promptName: promptData.name,
+              error: 'Hög aktivitet - försök igen om en stund'
+            };
+          }
+        };
+        
+        const result = await makePreviewRequest();
+        setRetryMessage(null); // Rensa retry-meddelande när det lyckas
           
           results.push(result);
           setPreviewResults([...results]);
@@ -164,14 +200,6 @@ export default function GenerateAIPoster() {
           if (i < memoryPrompts.length - 1) {
             await new Promise(resolve => setTimeout(resolve, 1000));
           }
-          
-        } catch {
-          results.push({
-            url: '',
-            promptName: promptData.name,
-            error: 'Network error'
-          });
-        }
       }
       
       setCurrentGenerating('Slutför generering...');
@@ -225,6 +253,7 @@ export default function GenerateAIPoster() {
       setLoading(false);
       setStreamingProgress(0);
       setCurrentGenerating('');
+      setRetryMessage(null);
     }
   };
 
@@ -422,6 +451,19 @@ export default function GenerateAIPoster() {
                   <Eye className="w-4 h-4" />
                   Du har <strong>{usageInfo.remaining}</strong> av <strong>{usageInfo.total}</strong> AI-genereringar kvar idag
                 </p>
+              </div>
+            )}
+            
+            {/* Retry Message */}
+            {retryMessage && (
+              <div className="mb-4 p-4 bg-amber-50 border border-amber-200 rounded-lg">
+                <div className="flex items-start gap-3">
+                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-amber-500 mt-0.5"></div>
+                  <div className="flex-1">
+                    <h3 className="font-semibold text-amber-800 mb-1">Hög aktivitet</h3>
+                    <p className="text-sm text-amber-700">{retryMessage}</p>
+                  </div>
+                </div>
               </div>
             )}
             

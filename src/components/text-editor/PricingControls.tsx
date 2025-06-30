@@ -11,10 +11,10 @@ interface PricingControlsProps {
 
 export default function PricingControls({ isCheckingOut, onCheckout, onCancel, selectedFormat }: PricingControlsProps) {
   // Beräkna priser baserat på format
-  const basePriceDigital = 79;
+  const basePriceDigital = 19;
   const basePricePrint = 299;
   
-  const digitalPrice = basePriceDigital; // Digital pris är alltid 79kr oavsett storlek
+  const digitalPrice = basePriceDigital; // Digital pris är alltid 19kr oavsett storlek
   const printPrice = basePricePrint + (selectedFormat.priceModifier || 0);
 
   // Track pricing viewed när komponenten visas
