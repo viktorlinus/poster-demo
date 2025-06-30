@@ -86,22 +86,31 @@ export default function MobileTextEditor({
         throw new Error('Kunde inte skapa poster');
       }
       
+      console.log('Mobile: Canvas created, dataURL length:', posterDataUrl.length, 'bytes');
+      console.log('Mobile: Canvas size in MB:', (posterDataUrl.length / 1024 / 1024).toFixed(2), 'MB');
+      
       // Step 1: Save image to R2 temp storage
       console.log('Mobile: Starting save image request...');
-      const saveImageRes = await fetch('/api/save-temp-image', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          posterDataUrl,
-          metadata: {
-            petName: showText && petName.trim() && petName.trim() !== 'Bella' ? petName.trim() : '',
-            style: style || 'watercolor',
-            hasText: showText && petName.trim().length > 0 && petName.trim() !== 'Bella',
-            format: selectedFormat.id,
-            dimensions: selectedFormat.dimensions
-          }
-        })
-      });
+      let saveImageRes;
+      try {
+        saveImageRes = await fetch('/api/save-temp-image', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            posterDataUrl,
+            metadata: {
+              petName: showText && petName.trim() && petName.trim() !== 'Bella' ? petName.trim() : '',
+              style: style || 'watercolor',
+              hasText: showText && petName.trim().length > 0 && petName.trim() !== 'Bella',
+              format: selectedFormat.id,
+              dimensions: selectedFormat.dimensions
+            }
+          })
+        });
+      } catch (fetchError) {
+        console.error('Mobile: Network error during fetch:', fetchError);
+        throw new Error(`Nätverksfel: ${fetchError instanceof Error ? fetchError.message : 'Okänt fel'}`);
+      }
       
       console.log('Mobile: Save image response status:', saveImageRes.status);
       if (!saveImageRes.ok) {
