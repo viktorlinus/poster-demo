@@ -4,8 +4,26 @@ import { dataUrlToR2 } from '@/lib/r2-storage';
 export async function POST(request: NextRequest) {
   try {
     console.log('Save temp image - Starting...');
-    const { posterDataUrl, metadata } = await request.json();
-    console.log('Save temp image - Data received, posterDataUrl length:', posterDataUrl?.length);
+    
+    // Hantera både JSON och FormData för mobil-kompatibilitet
+    let posterDataUrl, metadata;
+    
+    const contentType = request.headers.get('content-type') || '';
+    
+    if (contentType.includes('multipart/form-data')) {
+      // FormData från mobil
+      const formData = await request.formData();
+      posterDataUrl = formData.get('posterDataUrl') as string;
+      const metadataStr = formData.get('metadata') as string;
+      metadata = metadataStr ? JSON.parse(metadataStr) : {};
+      console.log('Save temp image - FormData received, posterDataUrl length:', posterDataUrl?.length);
+    } else {
+      // JSON från desktop
+      const body = await request.json();
+      posterDataUrl = body.posterDataUrl;
+      metadata = body.metadata;
+      console.log('Save temp image - JSON received, posterDataUrl length:', posterDataUrl?.length);
+    }
     
     if (!posterDataUrl) {
       console.log('Save temp image - Missing posterDataUrl');

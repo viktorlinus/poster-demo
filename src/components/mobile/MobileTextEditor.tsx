@@ -93,19 +93,20 @@ export default function MobileTextEditor({
       console.log('Mobile: Starting save image request...');
       let saveImageRes;
       try {
+        // Använd FormData istället för JSON för bättre mobil-kompatibilitet
+        const formData = new FormData();
+        formData.append('posterDataUrl', posterDataUrl);
+        formData.append('metadata', JSON.stringify({
+          petName: showText && petName.trim() && petName.trim() !== 'Bella' ? petName.trim() : '',
+          style: style || 'watercolor',
+          hasText: showText && petName.trim().length > 0 && petName.trim() !== 'Bella',
+          format: selectedFormat.id,
+          dimensions: selectedFormat.dimensions
+        }));
+        
         saveImageRes = await fetch('/api/save-temp-image', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            posterDataUrl,
-            metadata: {
-              petName: showText && petName.trim() && petName.trim() !== 'Bella' ? petName.trim() : '',
-              style: style || 'watercolor',
-              hasText: showText && petName.trim().length > 0 && petName.trim() !== 'Bella',
-              format: selectedFormat.id,
-              dimensions: selectedFormat.dimensions
-            }
-          })
+          body: formData  // Ingen Content-Type header - låt browser sätta den
         });
       } catch (fetchError) {
         console.error('Mobile: Network error during fetch:', fetchError);
