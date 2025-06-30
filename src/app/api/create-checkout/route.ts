@@ -1,13 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerStripe } from '@/lib/stripe';
-import { dataUrlToR2 } from '@/lib/r2-storage';
 import Stripe from 'stripe';
 
 export async function POST(request: NextRequest) {
   try {
-    const { tier, posterDataUrl, metadata } = await request.json();
+    const { tier, tempKey, orderId, fileName, metadata } = await request.json();
     
-    if (!posterDataUrl || !tier) {
+    if (!tempKey || !tier || !orderId) {
       return NextResponse.json({ error: 'Missing required data' }, { status: 400 });
     }
     
@@ -31,17 +30,10 @@ export async function POST(request: NextRequest) {
 
     const price = prices[tier as keyof typeof prices];
 
-    // Generate unique order ID
-    const orderId = `order_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    
-    // Create descriptive filename based on whether text was actually used
+    // Get descriptive filename and metadata from request
     const hasActualText = metadata?.hasText && metadata?.petName && metadata.petName.trim().length > 0;
     const petNameForFile = hasActualText ? metadata.petName.trim() : 'husdjur';
-    const descriptiveFileName = `${petNameForFile}_${metadata?.style || 'watercolor'}_${orderId}.png`;
-    
-    // Save poster to R2 as temp file
-    const tempKey = `temp_orders/${descriptiveFileName}`;
-    await dataUrlToR2(posterDataUrl, tempKey);
+    const descriptiveFileName = fileName || `${petNameForFile}_${metadata?.style || 'watercolor'}_${orderId}.png`;
     
     // Create Stripe Checkout Session
     const stripe = getServerStripe();

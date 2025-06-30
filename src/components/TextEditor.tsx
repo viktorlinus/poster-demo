@@ -131,11 +131,11 @@ export default function TextEditor({ backgroundImageUrl, onCancel, style }: Text
         throw new Error('Kunde inte skapa poster');
       }
       
-      const res = await fetch('/api/create-checkout', {
+      // Step 1: Save image to R2 temp storage
+      const saveImageRes = await fetch('/api/save-temp-image', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          tier,
           posterDataUrl,
           metadata: {
             petName: showText && petName.trim() && petName.trim() !== 'Bella' ? petName.trim() : '',
@@ -147,7 +147,36 @@ export default function TextEditor({ backgroundImageUrl, onCancel, style }: Text
         })
       });
       
-      const { sessionId } = await res.json();
+      if (!saveImageRes.ok) {
+        throw new Error('Kunde inte spara bild');
+      }
+      
+      const { tempKey, orderId, fileName } = await saveImageRes.json();
+      
+      // Step 2: Create checkout session with image reference
+      const checkoutRes = await fetch('/api/create-checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          tier,
+          tempKey,
+          orderId,
+          fileName,
+          metadata: {
+            petName: showText && petName.trim() && petName.trim() !== 'Bella' ? petName.trim() : '',
+            style: style || 'watercolor',
+            hasText: showText && petName.trim().length > 0 && petName.trim() !== 'Bella',
+            format: selectedFormat.id,
+            dimensions: selectedFormat.dimensions
+          }
+        })
+      });
+      
+      if (!checkoutRes.ok) {
+        throw new Error('Kunde inte skapa checkout');
+      }
+      
+      const { sessionId } = await checkoutRes.json();
       const stripe = await getStripe();
       await stripe?.redirectToCheckout({ sessionId });
       
