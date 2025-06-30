@@ -105,13 +105,52 @@ export default function MobileTextEditor({
         throw new Error(`Grundläggande nätverksfel: ${getError instanceof Error ? getError.message : 'Okänt'}`);
       }
       
-      // Step 2: Om GET funkar, testa POST
-      console.log('Mobile: Starting save image request...');
+      // Step 2: Om GET funkar, testa POST med liten data först
+      console.log('Mobile: Testing POST with small data...');
+      let smallPostRes;
+      try {
+        smallPostRes = await fetch('/api/debug-mobile', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            test: 'small data',
+            size: 'tiny'
+          })
+        });
+        console.log('Mobile: Small POST result:', smallPostRes.status);
+      } catch (smallPostError) {
+        console.error('Mobile: Small POST failed:', smallPostError);
+        throw new Error(`POST-fel: ${smallPostError instanceof Error ? smallPostError.message : 'Okänt'}`);
+      }
+      
+      // Step 3: Mobil-vänlig blob-approach istället för dataURL
+      console.log('Mobile: Creating blob from canvas...');
+      
+      // Använd toBlob() istället för toDataURL() för mobil-kompatibilitet
+      const canvas = canvasRef.current;
+      if (!canvas) {
+        throw new Error('Canvas är inte tillgänglig');
+      }
+      
+      // Skapa blob asynkront (mobil-vänlig)
+      const blob = await new Promise<Blob>((resolve, reject) => {
+        canvas.toBlob((blob) => {
+          if (blob) {
+            resolve(blob);
+          } else {
+            reject(new Error('Kunde inte skapa blob från canvas'));
+          }
+        }, 'image/png', 0.9); // 90% kvalitet
+      });
+      
+      console.log('Mobile: Blob created, size:', blob.size, 'bytes');
+      console.log('Mobile: Blob size in MB:', (blob.size / 1024 / 1024).toFixed(2), 'MB');
+      
       let saveImageRes;
       try {
         // Använd FormData istället för JSON för bättre mobil-kompatibilitet
         const formData = new FormData();
-        formData.append('posterDataUrl', posterDataUrl);
+        formData.append('posterBlob', blob, 'poster.png');  // Blob istället för dataURL
         formData.append('metadata', JSON.stringify({
           petName: showText && petName.trim() && petName.trim() !== 'Bella' ? petName.trim() : '',
           style: style || 'watercolor',
@@ -120,7 +159,7 @@ export default function MobileTextEditor({
           dimensions: selectedFormat.dimensions
         }));
         
-        saveImageRes = await fetch('/api/debug-mobile', {
+        saveImageRes = await fetch('/api/save-temp-image', {
           method: 'POST',
           body: formData  // Ingen Content-Type header - låt browser sätta den
         });

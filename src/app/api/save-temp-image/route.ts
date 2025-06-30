@@ -11,12 +11,19 @@ export async function POST(request: NextRequest) {
     const contentType = request.headers.get('content-type') || '';
     
     if (contentType.includes('multipart/form-data')) {
-      // FormData från mobil
+      // FormData från mobil med blob
       const formData = await request.formData();
-      posterDataUrl = formData.get('posterDataUrl') as string;
+      const posterBlob = formData.get('posterBlob') as File;
       const metadataStr = formData.get('metadata') as string;
       metadata = metadataStr ? JSON.parse(metadataStr) : {};
-      console.log('Save temp image - FormData received, posterDataUrl length:', posterDataUrl?.length);
+      
+      if (posterBlob) {
+        // Konvertera blob till dataURL för R2-upload
+        const buffer = await posterBlob.arrayBuffer();
+        const base64 = Buffer.from(buffer).toString('base64');
+        posterDataUrl = `data:image/png;base64,${base64}`;
+        console.log('Save temp image - Blob converted to dataURL, length:', posterDataUrl.length);
+      }
     } else {
       // JSON från desktop
       const body = await request.json();
