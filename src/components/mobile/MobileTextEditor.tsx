@@ -87,6 +87,7 @@ export default function MobileTextEditor({
       }
       
       // Step 1: Save image to R2 temp storage
+      console.log('Mobile: Starting save image request...');
       const saveImageRes = await fetch('/api/save-temp-image', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -102,7 +103,10 @@ export default function MobileTextEditor({
         })
       });
       
+      console.log('Mobile: Save image response status:', saveImageRes.status);
       if (!saveImageRes.ok) {
+        const errorText = await saveImageRes.text();
+        console.log('Mobile: Save image error response:', errorText);
         throw new Error('Kunde inte spara bild');
       }
       

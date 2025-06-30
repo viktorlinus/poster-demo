@@ -3,9 +3,12 @@ import { dataUrlToR2 } from '@/lib/r2-storage';
 
 export async function POST(request: NextRequest) {
   try {
+    console.log('Save temp image - Starting...');
     const { posterDataUrl, metadata } = await request.json();
+    console.log('Save temp image - Data received, posterDataUrl length:', posterDataUrl?.length);
     
     if (!posterDataUrl) {
+      console.log('Save temp image - Missing posterDataUrl');
       return NextResponse.json({ error: 'Missing posterDataUrl' }, { status: 400 });
     }
     
@@ -19,7 +22,9 @@ export async function POST(request: NextRequest) {
     
     // Save poster to R2 as temp file
     const tempKey = `temp_orders/${descriptiveFileName}`;
+    console.log('Save temp image - Saving to R2 with key:', tempKey);
     await dataUrlToR2(posterDataUrl, tempKey);
+    console.log('Save temp image - Successfully saved to R2');
     
     return NextResponse.json({ 
       tempKey,
