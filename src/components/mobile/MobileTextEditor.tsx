@@ -137,7 +137,12 @@ export default function MobileTextEditor({
       
     } catch (error) {
       console.error('Checkout error:', error);
-      alert('Något gick fel vid checkout. Försök igen.');
+      // Mer detaljerad felmeddelande för debugging
+      if (error instanceof Error) {
+        alert(`Checkout fel: ${error.message}`);
+      } else {
+        alert('Något gick fel vid checkout. Försök igen.');
+      }
     } finally {
       setCheckingOut(false);
     }
