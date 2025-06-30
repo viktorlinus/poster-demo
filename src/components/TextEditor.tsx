@@ -126,25 +126,39 @@ export default function TextEditor({ backgroundImageUrl, onCancel, style }: Text
     setIsCheckingOut(true);
     
     try {
-      const posterDataUrl = createCleanCanvas();
-      if (!posterDataUrl) {
-        throw new Error('Kunde inte skapa poster');
+      // Skapa blob istället för dataURL för både desktop och mobil
+      const canvas = canvasRef.current;
+      if (!canvas) {
+        throw new Error('Canvas är inte tillgänglig');
       }
       
-      // Step 1: Save image to R2 temp storage
+      // Skapa blob asynkront (samma som mobil)
+      const blob = await new Promise<Blob>((resolve, reject) => {
+        canvas.toBlob((blob) => {
+          if (blob) {
+            resolve(blob);
+          } else {
+            reject(new Error('Kunde inte skapa blob från canvas'));
+          }
+        }, 'image/png', 0.9); // 90% kvalitet
+      });
+      
+      console.log('Desktop: Blob created, size:', blob.size, 'bytes');
+      
+      // Step 1: Save image to R2 temp storage med blob
+      const formData = new FormData();
+      formData.append('posterBlob', blob, 'poster.png');
+      formData.append('metadata', JSON.stringify({
+        petName: showText && petName.trim() && petName.trim() !== 'Bella' ? petName.trim() : '',
+        style: style || 'watercolor',
+        hasText: showText && petName.trim().length > 0 && petName.trim() !== 'Bella',
+        format: selectedFormat.id,
+        dimensions: selectedFormat.dimensions
+      }));
+      
       const saveImageRes = await fetch('/api/save-temp-image', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          posterDataUrl,
-          metadata: {
-            petName: showText && petName.trim() && petName.trim() !== 'Bella' ? petName.trim() : '',
-            style: style || 'watercolor',
-            hasText: showText && petName.trim().length > 0 && petName.trim() !== 'Bella',
-            format: selectedFormat.id,
-            dimensions: selectedFormat.dimensions
-          }
-        })
+        body: formData
       });
       
       if (!saveImageRes.ok) {
