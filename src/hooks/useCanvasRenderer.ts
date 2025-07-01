@@ -252,19 +252,28 @@ export function useCanvasRenderer({
 
   }, [backgroundImage, petName, memorialText, selectedFont, memorialFont, nameSize, textSize, textColor, memorialColor, imageScale, imageVerticalPosition, textSpacing, backgroundColor, showText, textVerticalPosition, fontsLoaded, canvasWidth, canvasHeight, posterFormat, adaptationMode]);
 
-  // Clean canvas för checkout
+  // Clean canvas för checkout - UTAN VATTENSTÄMPLAR!
   const createCleanCanvas = () => {
-    if (!backgroundImage) return null;
+    if (!backgroundImage) {
+      console.error('🚫 createCleanCanvas: No background image available');
+      return null;
+    }
 
+    console.log('🧼 Creating CLEAN canvas without watermarks...');
     const tempCanvas = document.createElement('canvas');
     tempCanvas.width = canvasWidth;
     tempCanvas.height = canvasHeight;
     const tempCtx = tempCanvas.getContext('2d');
     
-    if (!tempCtx) return null;
+    if (!tempCtx) {
+      console.error('🚫 createCleanCanvas: Could not get context');
+      return null;
+    }
 
+    // Clear background
     tempCtx.fillStyle = backgroundColor;
     tempCtx.fillRect(0, 0, canvasWidth, canvasHeight);
+    console.log('✅ Clean canvas: Background filled');
 
     // Smart anpassning med VINTAGE topp-marginal logik för clean canvas
     let adaptation = calculateImageAdaptation(
@@ -302,6 +311,7 @@ export function useCanvasRenderer({
       };
     }
     
+    // Rita bakgrundsbild UTAN vattenstämplar
     tempCtx.drawImage(
       backgroundImage, 
       adaptation.imageX, 
@@ -309,8 +319,11 @@ export function useCanvasRenderer({
       adaptation.imageWidth, 
       adaptation.imageHeight
     );
+    console.log('✅ Clean canvas: Background image drawn');
 
+    // Rita text om aktiverad - UTAN vattenstämplar
     if (showText) {
+      console.log('✅ Clean canvas: Adding text...');
       // VINTAGE LOGIC för clean canvas
       const textAreaStartY = adaptation.imageY + adaptation.imageHeight + 20;
       const textAreaHeight = canvasHeight - textAreaStartY - 20;
@@ -328,6 +341,7 @@ export function useCanvasRenderer({
       }
       tempCtx.fillStyle = textColor;
       tempCtx.fillText(petName, canvasWidth / 2, nameY);
+      console.log(`✅ Clean canvas: Pet name "${petName}" added`);
 
       if (fontsLoaded && memorialFont) {
         tempCtx.font = getCanvasFont(memorialFont, textSize, false);
@@ -337,9 +351,17 @@ export function useCanvasRenderer({
       tempCtx.fillStyle = memorialColor;
       const memorialY = nameY + (nameSize * 0.3) + textSpacing;
       tempCtx.fillText(memorialText, canvasWidth / 2, memorialY);
+      console.log(`✅ Clean canvas: Memorial text "${memorialText}" added`);
     }
 
-    return tempCanvas.toDataURL('image/png', 1.0);
+    // 🚨 VIKTIGT: INGA VATTENSTÄMPLAR HÄR!
+    // Gamla koden hade samma vattenstämplar som huvudcanvas - det var felet!
+    
+    const cleanDataUrl = tempCanvas.toDataURL('image/png', 1.0);
+    console.log('🎉 Clean canvas created successfully - NO WATERMARKS!');
+    console.log('📏 Clean canvas size:', cleanDataUrl.length, 'characters');
+    
+    return cleanDataUrl;
   };
 
   return {

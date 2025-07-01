@@ -133,9 +133,18 @@ export default function TextEditor({ backgroundImageUrl, onCancel, style }: Text
       }
       
       // Skapa ren canvas utan watermark
+      console.log('Desktop: Calling createCleanCanvas...');
       const cleanDataUrl = createCleanCanvas();
+      console.log('Desktop: createCleanCanvas returned:', cleanDataUrl ? 'SUCCESS' : 'NULL');
       if (!cleanDataUrl) {
         throw new Error('Kunde inte skapa ren canvas');
+      }
+      
+      // Logga om clean canvas verkligen är ren
+      if (cleanDataUrl.includes('PREVIEW')) {
+        console.error('PROBLEM: Clean canvas innehåller fortfarande PREVIEW text!');
+      } else {
+        console.log('SUCCESS: Clean canvas är verkligen ren');
       }
       
       // Konvertera clean dataURL till blob
