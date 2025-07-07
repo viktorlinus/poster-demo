@@ -49,24 +49,24 @@ export default function HomePage() {
 
   const customerStories = [
     {
-      image: "/images/hund-efter-4.png",
-      quote: "Vi älskar Bellas nya konstposter i vardagsrummet. Den fångade hennes personlighet perfekt!",
+      image: "/images/poster-irl.jpg",
+      quote: "Dyno ser så majestätisk ut som akvarell! Kvaliteten överträffade våra förväntningar.",
       name: "Anna & Marcus",
-      pet: "Bella",
+      pet: "Dyno",
       location: "Stockholm"
     },
     {
-      image: "/images/olje-text.png", 
-      quote: "Perfekt tavla av vår älskade katt och hund. Kvaliteten överträffade våra förväntningar.",
+      image: "/images/poster-irl2.jpg", 
+      quote: "Vi älskar hur AI fångade båda hundarna perfekt! Charlie & Chloé lever nu som konst på väggen.",
       name: "Lisa",
-      pet: "Tiff & Freja",
+      pet: "Charlie & Chloé",
       location: "Göteborg"
     },
     {
-      image: "/images/hund-efter-2-poster.png",
-      quote: "Fantastisk present till mormor.",
+      image: "/images/poster-irl3.jpg",
+      quote: "Glenn som blyertsteckning är otroligt detaljerad. Perfekt present till mormor!",
       name: "Erik",
-      pet: "Chico",
+      pet: "Glenn",
       location: "Malmö"
     }
   ];
@@ -483,12 +483,9 @@ export default function HomePage() {
       {/* Examples Gallery */}
       <section id="examples" className="px-4 py-16">
         <div className="max-w-6xl mx-auto">
-          <h2 className="text-3xl md:text-4xl font-bold text-center text-gray-900 mb-4">
+          <h2 className="text-3xl md:text-4xl font-bold text-center text-gray-900 mb-12">
             Riktiga resultat från våra kunder
           </h2>
-          <p className="text-lg text-gray-600 text-center mb-12 max-w-2xl mx-auto">
-            Inga fake reviews - bara äkta transformationer och glada kunder.
-          </p>
           
           <div className="grid md:grid-cols-3 gap-8 mb-12">
             {customerStories.map((story, index) => (
@@ -503,16 +500,7 @@ export default function HomePage() {
                   />
                 </div>
                 <div className="p-6">
-                  <div className="flex gap-1 mb-3">
-                    {[...Array(5)].map((_, i) => (
-                      <Star key={i} className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                    ))}
-                  </div>
-                  <p className="text-gray-700 mb-4 italic">&quot;{story.quote}&quot;</p>
-                  <div className="text-sm">
-                    <div className="font-semibold text-gray-900">{story.name}</div>
-                    <div className="text-gray-500">{story.pet} • {story.location}</div>
-                  </div>
+                  <p className="text-gray-700 italic">&quot;{story.quote}&quot;</p>
                 </div>
               </div>
             ))}
@@ -558,7 +546,10 @@ export default function HomePage() {
                   </div>
                   <p className="text-sm text-gray-600 mb-2">{style.description}</p>
                   <p className="text-xs text-gray-500">Exempel: {style.example}</p>
-                  <div className="mt-3 text-orange-600 font-semibold">Från 79kr</div>
+                  <div className="mt-3 flex items-center gap-2">
+                    <span className="text-sm text-gray-400 line-through">Från 79kr</span>
+                    <span className="text-orange-600 font-semibold">Från 29kr</span>
+                  </div>
                 </div>
               </div>
             ))}
@@ -579,7 +570,11 @@ export default function HomePage() {
               <div className="text-center">
                 <div className="text-4xl mb-4">💻</div>
                 <h3 className="text-2xl font-bold text-gray-900 mb-2">Digital</h3>
-                <div className="text-3xl font-bold text-orange-600 mb-4">79kr</div>
+                <div className="mb-4">
+                  <div className="text-lg text-gray-400 line-through mb-1">Ordinarie 79kr</div>
+                  <div className="text-3xl font-bold text-orange-600">29kr</div>
+                  <div className="text-sm text-red-500 font-semibold">🔥 LANSERINGS-REA</div>
+                </div>
                 <ul className="text-left space-y-3 mb-6">
                   <li className="flex items-center gap-2">
                     <Check className="w-4 h-4 text-green-500" />

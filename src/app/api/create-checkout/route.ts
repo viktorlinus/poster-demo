@@ -13,7 +13,7 @@ export async function POST(request: NextRequest) {
     // Define pricing based on your memory files
     const prices = {
       digital: {
-        amount: 1900, // 19kr in öre
+        amount: 2900, // 29kr in öre
         name: 'AI-Poster Digital',
         description: 'Högupplöst digital fil för hemutskrift'
       },

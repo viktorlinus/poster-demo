@@ -11,7 +11,7 @@ interface PricingControlsProps {
 
 export default function PricingControls({ isCheckingOut, onCheckout, onCancel, selectedFormat }: PricingControlsProps) {
   // Beräkna priser baserat på format
-  const basePriceDigital = 19;
+  const basePriceDigital = 29;
   const basePricePrint = 299;
   
   const digitalPrice = basePriceDigital; // Digital pris är alltid 19kr oavsett storlek
@@ -38,7 +38,10 @@ export default function PricingControls({ isCheckingOut, onCheckout, onCancel, s
             <h5 className="font-medium text-blue-900 text-sm">Digital</h5>
             <p className="text-xs text-blue-700">Högupplöst fil • {selectedFormat.label.split(' ')[0]}</p>
           </div>
-          <div className="text-lg font-bold text-blue-900">{digitalPrice}kr</div>
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-gray-400 line-through">79kr</span>
+            <span className="text-lg font-bold text-blue-900">{digitalPrice}kr</span>
+          </div>
         </div>
         <button
           onClick={() => handleCheckout('digital')}

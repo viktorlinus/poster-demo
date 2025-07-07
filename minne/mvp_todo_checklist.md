@@ -17,6 +17,7 @@
 - [x] **Impressum/företagsinfo** - ✅ FIXED: Lagt till i footer med Viktor Ekström, Borås
 - [x] **Ångerrätt i köpvillkor** - ✅ FIXED: Tydlig info om "ej ångerrätt för personliga varor"
 - [x] **Support-email** - info@petmemories.se aktiverad ✅
+- [x] **Vattenstämplar på sparade bilder** - ✅ FIXED: createCleanCanvas() fungerar korrekt, R2 sparar rena bilder
 
 ## ✅ MVP-CHECKLISTAN – "Pet Memories"
 *(allt du verkligen måste bocka av innan du trycker på **Starta annonser**)*
@@ -26,7 +27,7 @@
 |--------|-------|------------------------|
 | ✅ | **AI-generering** fungerar från upload → preview | - Felhantering (timeout, 429-limit)<br>- Watermark på gratis-preview |
 | ✅ | **Rate-limit** 3 requests / IP / dygn (+5 efter köp) | - Insert/Update i `daily_usage`-tabell<br>- 429-svar returnerar begripligt felmeddelande |
-| ✅ | **Stripe Checkout** live-nycklar | - Testat med riktigt kort 1 kr<br>- Success-sida visar rätt tier & download-länk |
+| ✅ | **Stripe Checkout** live-nycklar | - Testat med riktigt kort 1 kr (desktop & mobil)<br>- Success-sida visar rätt tier & download-länk<br>- Mobil checkout-flöde testat helt |
 | ✅ | **R2-upload** & URL i Stripe metadata | - Bilden öppnas i 100 % skala<br>- URL fungerar i Success-sidan |
 | ✅ | **Digital delivery** via download-länk | - Säker URL med sessionId-validering<br>- ✅ **FIXED: Filnamn problem när ingen text** |
 | ✅ | **Manual fulfilment-rutin** | - ✅ Komplett 5-stegs workflow: pending → uploaded → printed → shipped → delivered<br>- ✅ Supabase databas för persistent lagring<br>- ✅ Gelato Order ID & tracking number hantering<br>- ✅ Admin UI på /admin/fulfillment |
